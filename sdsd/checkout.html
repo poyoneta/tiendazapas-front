@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - SneakVault</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-container">
+            <a href="index.html" class="logo">
+                <span class="logo-icon">SV</span>
+                <span class="logo-text">SneakVault</span>
+            </a>
+            <nav class="nav">
+                <a href="index.html" class="nav-link">Inicio</a>
+                <a href="index.html#productos" class="nav-link">Productos</a>
+                <a href="#" class="nav-link">Novedades</a>
+                <a href="#" class="nav-link">Ofertas</a>
+            </nav>
+            <div class="header-actions">
+                <button class="icon-btn" id="wishlist-btn" onclick="openWishlist()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+                    </svg>
+                    <span class="badge" id="wishlist-count">0</span>
+                </button>
+                <button class="icon-btn" id="cart-btn" onclick="openCart()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/>
+                        <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>
+                    </svg>
+                    <span class="badge" id="cart-count">0</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Checkout -->
+    <main class="checkout-page">
+        <div class="checkout-container">
+            <div class="checkout-form-section">
+                <a href="index.html" class="back-link">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m15 18-6-6 6-6"/>
+                    </svg>
+                    Seguir comprando
+                </a>
+                <h1 class="checkout-title">Finalizar Compra</h1>
+                
+                <form id="checkout-form" onsubmit="processCheckout(event)">
+                    <!-- Información de Contacto -->
+                    <div class="form-section">
+                        <h2>Información de Contacto</h2>
+                        <div class="form-group">
+                            <label for="email">Correo electrónico</label>
+                            <input type="email" id="email" name="email" required placeholder="tu@email.com">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="firstName">Nombre</label>
+                                <input type="text" id="firstName" name="firstName" required placeholder="Juan">
+                            </div>
+                            <div class="form-group">
+                                <label for="lastName">Apellido</label>
+                                <input type="text" id="lastName" name="lastName" required placeholder="Pérez">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Teléfono</label>
+                            <input type="tel" id="phone" name="phone" required placeholder="+1 234 567 890">
+                        </div>
+                    </div>
+
+                    <!-- Dirección de Envío -->
+                    <div class="form-section">
+                        <h2>Dirección de Envío</h2>
+                        <div class="form-group">
+                            <label for="address">Dirección</label>
+                            <input type="text" id="address" name="address" required placeholder="Calle Principal 123">
+                        </div>
+                        <div class="form-group">
+                            <label for="address2">Apartamento, suite, etc. (opcional)</label>
+                            <input type="text" id="address2" name="address2" placeholder="Apto 4B">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="city">Ciudad</label>
+                                <input type="text" id="city" name="city" required placeholder="Ciudad">
+                            </div>
+                            <div class="form-group">
+                                <label for="state">Estado/Provincia</label>
+                                <input type="text" id="state" name="state" required placeholder="Estado">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="zip">Código Postal</label>
+                                <input type="text" id="zip" name="zip" required placeholder="12345">
+                            </div>
+                            <div class="form-group">
+                                <label for="country">País</label>
+                                <select id="country" name="country" required>
+                                    <option value="">Seleccionar país</option>
+                                    <option value="MX">México</option>
+                                    <option value="ES">España</option>
+                                    <option value="AR">Argentina</option>
+                                    <option value="CO">Colombia</option>
+                                    <option value="CL">Chile</option>
+                                    <option value="PE">Perú</option>
+                                    <option value="US">Estados Unidos</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Método de Envío -->
+                    <div class="form-section">
+                        <h2>Método de Envío</h2>
+                        <div class="shipping-options">
+                            <label class="shipping-option">
+                                <input type="radio" name="shipping" value="standard" checked>
+                                <div class="shipping-option-content">
+                                    <div class="shipping-info">
+                                        <span class="shipping-name">Envío Estándar</span>
+                                        <span class="shipping-time">5-7 días hábiles</span>
+                                    </div>
+                                    <span class="shipping-price">$9.99</span>
+                                </div>
+                            </label>
+                            <label class="shipping-option">
+                                <input type="radio" name="shipping" value="express">
+                                <div class="shipping-option-content">
+                                    <div class="shipping-info">
+                                        <span class="shipping-name">Envío Express</span>
+                                        <span class="shipping-time">2-3 días hábiles</span>
+                                    </div>
+                                    <span class="shipping-price">$19.99</span>
+                                </div>
+                            </label>
+                            <label class="shipping-option">
+                                <input type="radio" name="shipping" value="overnight">
+                                <div class="shipping-option-content">
+                                    <div class="shipping-info">
+                                        <span class="shipping-name">Envío Prioritario</span>
+                                        <span class="shipping-time">1 día hábil</span>
+                                    </div>
+                                    <span class="shipping-price">$29.99</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Información de Pago -->
+                    <div class="form-section">
+                        <h2>Información de Pago</h2>
+                        <div class="form-group">
+                            <label for="cardName">Nombre en la tarjeta</label>
+                            <input type="text" id="cardName" name="cardName" required placeholder="JUAN PÉREZ">
+                        </div>
+                        <div class="form-group">
+                            <label for="cardNumber">Número de tarjeta</label>
+                            <input type="text" id="cardNumber" name="cardNumber" required placeholder="1234 5678 9012 3456" maxlength="19">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="expiry">Fecha de expiración</label>
+                                <input type="text" id="expiry" name="expiry" required placeholder="MM/AA" maxlength="5">
+                            </div>
+                            <div class="form-group">
+                                <label for="cvv">CVV</label>
+                                <input type="text" id="cvv" name="cvv" required placeholder="123" maxlength="4">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-full btn-large">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/>
+                        </svg>
+                        Confirmar Pedido
+                    </button>
+                </form>
+            </div>
+
+            <!-- Resumen del Pedido -->
+            <div class="order-summary">
+                <h2>Resumen del Pedido</h2>
+                <div class="order-items" id="checkout-items">
+                    <!-- Items del pedido -->
+                </div>
+                <div class="order-totals">
+                    <div class="order-row">
+                        <span>Subtotal</span>
+                        <span id="checkout-subtotal">$0.00</span>
+                    </div>
+                    <div class="order-row">
+                        <span>Envío</span>
+                        <span id="checkout-shipping">$9.99</span>
+                    </div>
+                    <div class="order-row">
+                        <span>Impuestos</span>
+                        <span id="checkout-tax">$0.00</span>
+                    </div>
+                    <div class="order-row total">
+                        <span>Total</span>
+                        <span id="checkout-total">$0.00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal de Confirmación -->
+    <div class="modal-overlay" id="confirmation-modal">
+        <div class="modal">
+            <div class="modal-icon success">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/>
+                </svg>
+            </div>
+            <h2>¡Pedido Confirmado!</h2>
+            <p>Tu pedido ha sido procesado exitosamente. Recibirás un correo con los detalles de tu compra.</p>
+            <p class="order-number">Número de orden: <strong id="order-number">#SV-000000</strong></p>
+            <a href="index.html" class="btn btn-primary">Volver a la Tienda</a>
+        </div>
+    </div>
+
+    <!-- Sidebar Carrito -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebars()"></div>
+    
+    <aside class="sidebar" id="cart-sidebar">
+        <div class="sidebar-header">
+            <h3>Tu Carrito</h3>
+            <button> class="close-btn" onclick="closeCart()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div class="sidebar-content" id="cart-items">
+        </div>
+        <div class="sidebar-footer" id="cart-footer">
+            <div class="cart-total">
+                <span>Total:</span>
+                <span id="cart-total-amount">$0.00</span>
+            </div>
+            <button class="btn btn-primary btn-full" onclick="goToCheckout()">Realizar Compra</button>
+        </div>
+    </aside>
+
+    <!-- Sidebar Lista de Deseos -->
+    <aside class="sidebar" id="wishlist-sidebar">
+        <div class="sidebar-header">
+            <h3>Lista de Deseos</h3>
+            <button> class="close-btn" onclick="closeWishlist()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div class="sidebar-content" id="wishlist-items">
+        </div>
+    </aside>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-brand">
+                <span class="logo-icon">SV</span>
+                <span class="logo-text">SneakVault</span>
+                <p>Tu destino para las zapatillas más exclusivas.</p>
+            </div>
+            <div class="footer-links">
+                <h4>Enlaces</h4>
+                <a href="index.html">Inicio</a>
+                <a href="index.html#productos">Productos</a>
+                <a href="#">Nosotros</a>
+                <a href="#">Contacto</a>
+            </div>
+            <div class="footer-links">
+                <h4>Soporte</h4>
+                <a href="#">FAQ</a>
+                <a href="#">Envíos</a>
+                <a href="#">Devoluciones</a>
+                <a href="#">Guía de Tallas</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 SneakVault. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script src="js/data.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/checkout.js"></script>
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SneakVault - Tienda de Zapatillas Premium</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-container">
+            <a href="index.html" class="logo">
+                <span class="logo-icon">SV</span>
+                <span class="logo-text">SneakVault</span>
+            </a>
+            <nav class="nav">
+                <a href="#" class="nav-link active">Inicio</a>
+                <a href="#productos" class="nav-link">Productos</a>
+                <a href="#" class="nav-link">Novedades</a>
+                <a href="#" class="nav-link">Ofertas</a>
+            </nav>
+            <div class="header-actions">
+                <button class="icon-btn" id="wishlist-btn" onclick="openWishlist()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+                    </svg>
+                    <span class="badge" id="wishlist-count">0</span>
+                </button>
+                <button class="icon-btn" id="cart-btn" onclick="openCart()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/>
+                        <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>
+                    </svg>
+                    <span class="badge" id="cart-count">0</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <span class="hero-tag">Nueva Colección 2026</span>
+            <h1 class="hero-title">Eleva Tu Estilo</h1>
+            <p class="hero-subtitle">Descubre las zapatillas más exclusivas del mercado. Diseño, confort y rendimiento en cada paso.</p>
+            <a href="#productos" class="btn btn-primary">Explorar Colección</a>
+        </div>
+        <div class="hero-image">
+            <div class="hero-shape"></div>
+        </div>
+    </section>
+
+    <!-- Productos -->
+    <section class="products-section" id="productos">
+        <div class="section-header">
+            <h2 class="section-title">Colección Destacada</h2>
+            <p class="section-subtitle">Las zapatillas más buscadas del momento</p>
+        </div>
+        <div class="filters">
+            <button class="filter-btn active" data-filter="all">Todos</button>
+            <button class="filter-btn" data-filter="running">Running</button>
+            <button class="filter-btn" data-filter="casual">Casual</button>
+            <button class="filter-btn" data-filter="basketball">Basketball</button>
+        </div>
+        <div class="products-grid" id="products-grid">
+            <!-- Los productos se cargarán dinámicamente -->
+        </div>
+    </section>
+
+    <!-- Sidebar Carrito -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebars()"></div>
+    
+    <aside class="sidebar" id="cart-sidebar">
+        <div class="sidebar-header">
+            <h3>Tu Carrito</h3>
+            <button class="close-btn" onclick="closeCart()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div class="sidebar-content" id="cart-items">
+            <!-- Items del carrito -->
+        </div>
+        <div class="sidebar-footer" id="cart-footer">
+            <div class="cart-total">
+                <span>Total:</span>
+                <span id="cart-total-amount">$0.00</span>
+            </div>
+            <button class="btn btn-primary btn-full" onclick="goToCheckout()">Realizar Compra</button>
+        </div>
+    </aside>
+
+    <!-- Sidebar Lista de Deseos -->
+    <aside class="sidebar" id="wishlist-sidebar">
+        <div class="sidebar-header">
+            <h3>Lista de Deseos</h3>
+            <button class="close-btn" onclick="closeWishlist()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div class="sidebar-content" id="wishlist-items">
+            <!-- Items de la lista de deseos -->
+        </div>
+    </aside>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-brand">
+                <span class="logo-icon">SV</span>
+                <span class="logo-text">SneakVault</span>
+                <p>Tu destino para las zapatillas más exclusivas.</p>
+            </div>
+            <div class="footer-links">
+                <h4>Enlaces</h4>
+                <a href="#">Inicio</a>
+                <a href="#productos">Productos</a>
+                <a href="#">Nosotros</a>
+                <a href="#">Contacto</a>
+            </div>
+            <div class="footer-links">
+                <h4>Soporte</h4>
+                <a href="#">FAQ</a>
+                <a href="#">Envíos</a>
+                <a href="#">Devoluciones</a>
+                <a href="#">Guía de Tallas</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 SneakVault. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script src="js/data.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
