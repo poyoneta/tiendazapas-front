@@ -7,6 +7,7 @@ async function cargarProductos() {
         );
 
         products = await response.json();
+        
 
         console.log(products);
 

@@ -6,7 +6,6 @@ let wishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
 document.addEventListener('DOMContentLoaded', () => {
     updateCartCount();
     updateWishlistCount();
-    renderProducts();
     setupFilters();
 });
 
@@ -41,6 +40,7 @@ function createProductCard(product) {
         </div>
     `;
 }
+
 // ===== FILTROS =====
 function setupFilters() {
     const filterBtns = document.querySelectorAll('.filter-btn');
@@ -60,25 +60,24 @@ function quickAddToCart(productId) {
     if (!product) return;
 
     const existingItem = cart.find(item => item.id === productId);
-    
+
     if (existingItem) {
         existingItem.quantity += 1;
     } else {
         cart.push({
             id: product.id,
-            name: product.name,
-            price: product.price,
-            image: product.images[0],
-            size: product.sizes[0],
-            color: product.colors[0],
+            name: product.nombre,
+            price: 0, // o lo que venga de la API si después lo agregás
+            image: "placeholder.jpg",
+            size: "default",
+            color: "default",
             quantity: 1
         });
     }
-    
+
     saveCart();
     updateCartCount();
-    showToast('Producto añadido al carrito');
-    openCart();
+    showToast("Producto añadido al carrito");
 }
 
 function addToCart(productId, size, color, quantity) {
@@ -198,27 +197,27 @@ function renderCartItems() {
 // ===== LISTA DE DESEOS =====
 function toggleWishlist(productId) {
     const index = wishlist.findIndex(item => item.id === productId);
-    
+
     if (index > -1) {
         wishlist.splice(index, 1);
-        showToast('Eliminado de favoritos');
+        showToast("Eliminado de favoritos");
     } else {
         const product = products.find(p => p.id === productId);
+
         if (product) {
             wishlist.push({
                 id: product.id,
-                name: product.name,
-                price: product.price,
-                image: product.images[0],
-                category: product.category
+                name: product.nombre,
+                image: "placeholder.jpg",
+                category: product.marca?.nombre || "Sin marca"
             });
-            showToast('Añadido a favoritos');
+
+            showToast("Añadido a favoritos");
         }
     }
-    
+
     saveWishlist();
     updateWishlistCount();
-    renderProducts(document.querySelector('.filter-btn.active')?.dataset.filter || 'all');
     renderWishlistItems();
 }
 
