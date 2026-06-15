@@ -10,6 +10,8 @@ async function cargarProductos() {
 
         console.log(products);
 
+        renderProducts();
+
     } catch (error) {
         console.error(error);
     }
