@@ -23,23 +23,22 @@ function renderProducts(filter = 'all') {
 
 function createProductCard(product) {
     return `
-        <div class="product-card">
-            <div class="product-content">
-                <h3 class="product-name">
-                    <a href="producto.html?id=${product.id}">
-                        ${product.nombre}
-                    </a>
-                </h3>
+        <a href="producto.html?id=${product.id}" style="text-decoration:none;color:inherit;">
+            <div class="product-card">
+                <div class="product-content">
+                    <h3 class="product-name">${product.nombre}</h3>
 
-                <p>${product.descripcion ?? 'Sin descripción'}</p>
+                    <p>${product.descripcion ?? 'Sin descripción'}</p>
 
-                <p>
-                    Marca: ${product.marca?.nombre ?? 'Sin marca'}
-                </p>
+                    <p>Marca: ${product.marca?.nombre ?? 'Sin marca'}</p>
+
+                    <p>ID: ${product.id}</p>
+                </div>
             </div>
-        </div>
+        </a>
     `;
 }
+
 
 // ===== FILTROS =====
 function setupFilters() {

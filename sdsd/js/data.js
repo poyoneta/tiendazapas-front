@@ -19,3 +19,20 @@ async function cargarProductos() {
 }
 
 cargarProductos();
+
+async function cargarVariantes(id) {
+    try {
+        const response = await fetch(
+            `https://localhost:7049/api/Catalogo/${id}/variantes`
+        );
+
+        const variantes = await response.json();
+
+        console.log(variantes);
+
+        return variantes;
+
+    } catch (error) {
+        console.error(error);
+    }
+}
