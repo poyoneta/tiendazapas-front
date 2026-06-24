@@ -28,6 +28,7 @@
                     </svg>
                     <span class="badge" id="wishlist-count">0</span>
                 </button>
+
                 <button class="icon-btn" id="cart-btn" onclick="openCart()">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/>
@@ -75,15 +76,17 @@
     <aside class="sidebar" id="cart-sidebar">
         <div class="sidebar-header">
             <h3>Tu Carrito</h3>
-            </button> class="close-btn" onclick="closeCart()">
+
+            <!-- ✔️ CORREGIDO -->
+            <button class="close-btn" onclick="closeCart()">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
                 </svg>
             </button>
         </div>
-        <div class="sidebar-content" id="cart-items">
-            <!-- Items del carrito -->
-        </div>
+
+        <div class="sidebar-content" id="cart-items"></div>
+
         <div class="sidebar-footer" id="cart-footer">
             <div class="cart-total">
                 <span>Total:</span>
@@ -97,15 +100,16 @@
     <aside class="sidebar" id="wishlist-sidebar">
         <div class="sidebar-header">
             <h3>Lista de Deseos</h3>
-            </button> class="close-btn" onclick="closeWishlist()">
+
+            <!-- ✔️ CORREGIDO -->
+            <button class="close-btn" onclick="closeWishlist()">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
                 </svg>
             </button>
         </div>
-        <div class="sidebar-content" id="wishlist-items">
-            <!-- Items de la lista de deseos -->
-        </div>
+
+        <div class="sidebar-content" id="wishlist-items"></div>
     </aside>
 
     <!-- Footer -->

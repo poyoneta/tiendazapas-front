@@ -6,7 +6,6 @@ let wishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
 document.addEventListener('DOMContentLoaded', () => {
     updateCartCount();
     updateWishlistCount();
-    renderProducts();
     setupFilters();
 });
 
@@ -23,37 +22,19 @@ function renderProducts(filter = 'all') {
 }
 
 function createProductCard(product) {
-    const isInWishlist = wishlist.some(item => item.id === product.id);
-    
     return `
-        <div class="product-card" data-category="${product.category}">
-            <div class="product-image">
-                <a href="producto.html?id=${product.id}">
-                    <img src="${product.images[0]}" alt="${product.name}">
-                </a>
-                ${product.badge ? `<span class="product-badge">${product.badge}</span>` : ''}
-                <div class="product-actions-overlay">
-                    <button class="action-btn ${isInWishlist ? 'active' : ''}" onclick="toggleWishlist(${product.id})" title="Añadir a favoritos">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
-                        </svg>
-                    </button>
-                    <button class="action-btn" onclick="quickAddToCart(${product.id})" title="Añadir al carrito">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/>
-                            <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>
-                        </svg>
-                    </button>
-                </div>
-            </div>
+        <div class="product-card">
             <div class="product-content">
-                <span class="product-category">${categoryNames[product.category]}</span>
                 <h3 class="product-name">
-                    <a href="producto.html?id=${product.id}">${product.name}</a>
+                    <a href="producto.html?id=${product.id}">
+                        ${product.nombre}
+                    </a>
                 </h3>
-                <p class="product-price">
-                    $${product.price.toFixed(2)}
-                    ${product.oldPrice ? `<span class="product-price-old">$${product.oldPrice.toFixed(2)}</span>` : ''}
+
+                <p>${product.descripcion ?? 'Sin descripción'}</p>
+
+                <p>
+                    Marca: ${product.marca?.nombre ?? 'Sin marca'}
                 </p>
             </div>
         </div>
@@ -79,25 +60,24 @@ function quickAddToCart(productId) {
     if (!product) return;
 
     const existingItem = cart.find(item => item.id === productId);
-    
+
     if (existingItem) {
         existingItem.quantity += 1;
     } else {
         cart.push({
             id: product.id,
-            name: product.name,
-            price: product.price,
-            image: product.images[0],
-            size: product.sizes[0],
-            color: product.colors[0],
+            name: product.nombre,
+            price: 0, // o lo que venga de la API si después lo agregás
+            image: "placeholder.jpg",
+            size: "default",
+            color: "default",
             quantity: 1
         });
     }
-    
+
     saveCart();
     updateCartCount();
-    showToast('Producto añadido al carrito');
-    openCart();
+    showToast("Producto añadido al carrito");
 }
 
 function addToCart(productId, size, color, quantity) {
@@ -217,27 +197,27 @@ function renderCartItems() {
 // ===== LISTA DE DESEOS =====
 function toggleWishlist(productId) {
     const index = wishlist.findIndex(item => item.id === productId);
-    
+
     if (index > -1) {
         wishlist.splice(index, 1);
-        showToast('Eliminado de favoritos');
+        showToast("Eliminado de favoritos");
     } else {
         const product = products.find(p => p.id === productId);
+
         if (product) {
             wishlist.push({
                 id: product.id,
-                name: product.name,
-                price: product.price,
-                image: product.images[0],
-                category: product.category
+                name: product.nombre,
+                image: "placeholder.jpg",
+                category: product.marca?.nombre || "Sin marca"
             });
-            showToast('Añadido a favoritos');
+
+            showToast("Añadido a favoritos");
         }
     }
-    
+
     saveWishlist();
     updateWishlistCount();
-    renderProducts(document.querySelector('.filter-btn.active')?.dataset.filter || 'all');
     renderWishlistItems();
 }
 

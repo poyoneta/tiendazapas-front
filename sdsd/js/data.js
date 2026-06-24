@@ -7,8 +7,11 @@ async function cargarProductos() {
         );
 
         products = await response.json();
+        
 
         console.log(products);
+
+        renderProducts();
 
     } catch (error) {
         console.error(error);
