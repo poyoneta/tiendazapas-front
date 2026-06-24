@@ -3,102 +3,162 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SneakVault - Tienda de Zapatillas Premium</title>
+
+    <title>Producto</title>
+
     <link rel="stylesheet" href="css/styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+          rel="stylesheet">
 </head>
+
 <body>
+
     <!-- Header -->
     <header class="header">
         <div class="header-container">
+
             <a href="index.html" class="logo">
                 <span class="logo-icon">SV</span>
                 <span class="logo-text">SneakVault</span>
             </a>
+
             <nav class="nav">
-                <a href="#" class="nav-link active">Inicio</a>
-                <a href="#productos" class="nav-link">Productos</a>
-                <a href="#" class="nav-link">Novedades</a>
-                <a href="#" class="nav-link">Ofertas</a>
+                <a href="index.html" class="nav-link">Inicio</a>
             </nav>
+
             <div class="header-actions">
+
                 <button class="icon-btn" id="wishlist-btn" onclick="openWishlist()">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
-                    </svg>
+                    ❤
                     <span class="badge" id="wishlist-count">0</span>
                 </button>
 
                 <button class="icon-btn" id="cart-btn" onclick="openCart()">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/>
-                        <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>
-                    </svg>
+                    🛒
                     <span class="badge" id="cart-count">0</span>
                 </button>
+
             </div>
+
         </div>
     </header>
 
-    <!-- Hero -->
-    <section class="hero">
-        <div class="hero-content">
-            <span class="hero-tag">Nueva Colección 2026</span>
-            <h1 class="hero-title">Eleva Tu Estilo</h1>
-            <p class="hero-subtitle">Descubre las zapatillas más exclusivas del mercado.</p>
-            <a href="#productos" class="btn btn-primary">Explorar Colección</a>
-        </div>
-    </section>
+    <!-- Detalle producto -->
+   <main class="product-detail">
 
-    <!-- Productos -->
-    <section class="products-section" id="productos">
-        <div class="section-header">
-            <h2 class="section-title">Colección Destacada</h2>
+    <div class="product-gallery">
+
+        <div class="main-image">
+            <img id="main-product-image" src="" alt="">
         </div>
 
-        <div class="products-grid" id="products-grid"></div>
-    </section>
+    </div>
 
-    <!-- CART -->
-    <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebars()"></div>
+    <div class="product-info">
 
+        <p class="product-category" id="product-category"></p>
+
+        <h1 class="product-title" id="product-title"></h1>
+
+        <p class="product-price" id="product-price"></p>
+
+        <p id="product-stock"></p>
+
+        <p class="product-description" id="product-description"></p>
+
+        <div class="product-options">
+
+            <div class="option-group">
+                <label>Talla</label>
+                <div class="size-options" id="size-options"></div>
+            </div>
+
+            <div class="option-group">
+                <label>Color</label>
+                <div class="color-options" id="color-options"></div>
+            </div>
+
+        </div>
+
+        <div class="quantity-selector">
+
+            <label>Cantidad</label>
+
+            <div class="quantity-controls">
+                <button class="qty-btn" onclick="decreaseQty()">−</button>
+
+                <input
+                    type="number"
+                    id="quantity"
+                    value="1"
+                    min="1">
+
+                <button class="qty-btn" onclick="increaseQty()">+</button>
+            </div>
+
+        </div>
+
+        <div class="product-actions">
+
+            <button
+                class="btn btn-primary btn-large"
+                onclick="addToCartFromDetail()">
+
+                Agregar al carrito
+
+            </button>
+
+        </div>
+
+    </div>
+
+</main>
+
+    <!-- Overlay -->
+    <div
+        class="sidebar-overlay"
+        id="sidebar-overlay"
+        onclick="closeSidebars()">
+    </div>
+
+    <!-- Carrito -->
     <aside class="sidebar" id="cart-sidebar">
+
         <div class="sidebar-header">
             <h3>Tu Carrito</h3>
 
             <button class="close-btn" onclick="closeCart()">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
-                </svg>
+                ✕
             </button>
-
         </div>
 
         <div class="sidebar-content" id="cart-items"></div>
+
     </aside>
 
-    <!-- WISHLIST -->
+    <!-- Wishlist -->
     <aside class="sidebar" id="wishlist-sidebar">
+
         <div class="sidebar-header">
             <h3>Lista de Deseos</h3>
 
             <button class="close-btn" onclick="closeWishlist()">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
-                </svg>
+                ✕
             </button>
-
         </div>
 
         <div class="sidebar-content" id="wishlist-items"></div>
+
     </aside>
 
-    <!-- FOOTER -->
+    <!-- Footer -->
     <footer class="footer">
         <p>&copy; 2026 SneakVault</p>
     </footer>
 
-    <script src="js/data.js"></script>
     <script src="js/app.js"></script>
+    <script src="js/producto.js"></script>
+
 </body>
 </html>
