@@ -22,23 +22,28 @@ function renderProducts(filter = 'all') {
 }
 
 function createProductCard(product) {
+    const urlBase = "https://localhost:7049";
+    
+    const imagenUrl = (product.imagenes && product.imagenes.length > 0) 
+        ? urlBase + product.imagenes[0].url 
+        : "img/placeholder.jpg";
+
     return `
         <a href="producto.html?id=${product.id}" style="text-decoration:none;color:inherit;">
             <div class="product-card">
+                <div class="product-image" style="height: 200px; display: flex; align-items: center; justify-content: center; background-color: #1a1a1a; overflow: hidden; border-radius: 8px;">
+                    <img src="${imagenUrl}" alt="${product.nombre}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                </div>
                 <div class="product-content">
                     <h3 class="product-name">${product.nombre}</h3>
-
                     <p>${product.descripcion ?? 'Sin descripción'}</p>
-
                     <p>Marca: ${product.marca?.nombre ?? 'Sin marca'}</p>
-
                     <p>ID: ${product.id}</p>
                 </div>
             </div>
         </a>
     `;
 }
-
 
 // ===== FILTROS =====
 function setupFilters() {
