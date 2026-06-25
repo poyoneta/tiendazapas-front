@@ -6,19 +6,42 @@ let wishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
 document.addEventListener('DOMContentLoaded', () => {
     updateCartCount();
     updateWishlistCount();
-    setupFilters();
+
+    cargarMarcas();
 });
 
+function agregarEventosFiltro() {
+
+    const botones = document.querySelectorAll(".filter-btn");
+
+    botones.forEach(btn => {
+
+        btn.addEventListener("click", () => {
+
+            botones.forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+
+            const marcaId = btn.dataset.id;
+
+            if (marcaId === "all") {
+                renderProducts(products);
+                return;
+            }
+
+            filtrarPorMarca(marcaId);
+
+        });
+
+    });
+
+}
+
 // ===== RENDERIZAR PRODUCTOS =====
-function renderProducts(filter = 'all') {
+function renderProducts(lista = products) {
     const grid = document.getElementById('products-grid');
     if (!grid) return;
 
-    const filteredProducts = filter === 'all' 
-        ? products 
-        : products.filter(p => p.category === filter);
-
-    grid.innerHTML = filteredProducts.map(product => createProductCard(product)).join('');
+    grid.innerHTML = lista.map(product => createProductCard(product)).join('');
 }
 
 function createProductCard(product) {
@@ -31,8 +54,8 @@ function createProductCard(product) {
     return `
         <a href="producto.html?id=${product.id}" style="text-decoration:none;color:inherit;">
             <div class="product-card">
-                <div class="product-image" style="height: 200px; display: flex; align-items: center; justify-content: center; background-color: #1a1a1a; overflow: hidden; border-radius: 8px;">
-                    <img src="${imagenUrl}" alt="${product.nombre}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                <div class="product-image">
+                    <img src="${imagenUrl}" alt="${product.nombre}">
                 </div>
                 <div class="product-content">
                     <h3 class="product-name">${product.nombre}</h3>
@@ -46,17 +69,7 @@ function createProductCard(product) {
 }
 
 // ===== FILTROS =====
-function setupFilters() {
-    const filterBtns = document.querySelectorAll('.filter-btn');
-    
-    filterBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            filterBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            renderProducts(btn.dataset.filter);
-        });
-    });
-}
+
 
 // ===== CARRITO =====
 function quickAddToCart(productId) {
