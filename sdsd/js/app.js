@@ -45,10 +45,8 @@ function renderProducts(lista = products) {
 }
 
 function createProductCard(product) {
-    const urlBase = "https://localhost:7049";
-    
-    const imagenUrl = (product.imagenes && product.imagenes.length > 0) 
-        ? urlBase + product.imagenes[0].url 
+   const imagenUrl = (product.imagenes && product.imagenes.length > 0) 
+        ? product.imagenes[0].url 
         : "img/placeholder.jpg";
 
     return `
@@ -112,9 +110,9 @@ function addToCart(productId, size, color, quantity) {
     } else {
         cart.push({
             id: product.id,
-            name: product.name,
-            price: product.price,
-            image: product.images[0],
+            name: product.nombre,
+            price: product.precio,
+            image: product.imagenes[0], 
             size: size,
             color: color,
             quantity: quantity

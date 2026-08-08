@@ -30,44 +30,46 @@ async function loadProduct() {
         window.location.href = "index.html";
         return;
     }
-
+     document.getElementById("product-title").textContent = "Cargando...";
     try {
-        // CORRECCIÓN 1: Usamos la ruta exacta que definiste: api/Catalogo/{id}
-        const productResponse = await fetch(`${urlBase}/api/Catalogo/${productId}`);
-        
-        // CORRECCIÓN 2: La ruta correcta según tu controlador es api/Catalogo/variantes/{zapatillaId}
-        const variantsResponse = await fetch(`${urlBase}/api/Catalogo/variantes/${productId}`);
+    const [productResponse, variantsResponse] = await Promise.all([
+        fetch(`${urlBase}/api/Catalogo/${productId}`),
+        fetch(`${urlBase}/api/Catalogo/variantes/${productId}`)
+    ]);
 
-        if (!productResponse.ok || !variantsResponse.ok) {
-            throw new Error(`Error al obtener datos: ${productResponse.status} / ${variantsResponse.status}`);
-        }
-
-        currentProduct = await productResponse.json();
-        variants = await variantsResponse.json();
-
-        // ... resto del código igual
-        selectedSize = variants[0]?.talla;
-        selectedColor = variants[0]?.color?.id;
-
-        renderProductDetail();
-
-    } catch (error) {
-        console.error("Error al cargar el producto:", error);
+    if (!productResponse.ok || !variantsResponse.ok) {
+        throw new Error(`Error al obtener datos: ${productResponse.status} / ${variantsResponse.status}`);
     }
+
+    currentProduct = await productResponse.json();
+    variants = await variantsResponse.json();
+
+    selectedSize = variants[0]?.talla;
+    selectedColor = variants[0]?.color?.id;
+
+    renderProductDetail();
+
+} catch (error) {
+    console.error("Error al cargar el producto:", error);
+    document.getElementById("product-title").textContent = "Error al cargar el producto";
+}
 }
 
 function renderProductDetail() {
     document.title = currentProduct.nombre;
 
-    // Lógica para la imagen usando urlBase
+    // Lógica corregida para la imagen
     const imgElement = document.getElementById("main-product-image");
+    
     if (currentProduct.imagenes && currentProduct.imagenes.length > 0) {
-        imgElement.src = urlBase + currentProduct.imagenes[0].url;
+        // QUITAMOS urlBase + ... y dejamos solo la URL que viene de la base de datos
+        imgElement.src = currentProduct.imagenes[0].url; 
     } else {
         imgElement.src = 'img/placeholder.jpg'; 
     }
+    
     imgElement.alt = currentProduct.nombre;
-
+    
     document.getElementById("product-title").textContent = currentProduct.nombre;
     document.getElementById("product-category").textContent = currentProduct.marca?.nombre || "Sin marca";
     document.getElementById("product-description").textContent = currentProduct.descripcion;
@@ -88,7 +90,7 @@ function renderProductDetail() {
     const colorContainer = document.getElementById("color-options");
     colorContainer.innerHTML = colores.map(color => `
         <button class="color-btn ${color.id === selectedColor ? "active" : ""}" 
-                style="background-color:${color.codigoHex}" 
+                style="background-color:${color.hex}"
                 onclick="selectColor(${color.id}, this)"></button>
     `).join("");
 
