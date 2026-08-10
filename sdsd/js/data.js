@@ -1,3 +1,5 @@
+const API_URL = "https://apitiendazapatillas.onrender.com";
+
 let products = [];
 
 async function cargarProductos() {
@@ -6,7 +8,7 @@ async function cargarProductos() {
 
     try {
         const response = await fetch(
-            "https://localhost:7049/api/Catalogo"
+            `${API_URL}/api/Catalogo`
         );
 
         products = await response.json();
@@ -23,7 +25,7 @@ cargarProductos();
 async function cargarVariantes(id) {
     try {
         const response = await fetch(
-            `https://localhost:7049/api/Catalogo/${id}/variantes`
+            `${API_URL}/api/Catalogo/${id}/variantes`
         );
 
         const variantes = await response.json();
@@ -36,13 +38,14 @@ async function cargarVariantes(id) {
         console.error(error);
     }
 }
+
 async function cargarMarcas() {
     try {
         const filters = document.querySelector(".filters");
         if (!filters) return; // no estamos en index.html, no hay nada que hacer acá
 
         const response = await fetch(
-            "https://localhost:7049/api/Catalogo/marcas"
+            `${API_URL}/api/Catalogo/marcas`
         );
 
         const marcas = await response.json();
@@ -68,12 +71,11 @@ async function cargarMarcas() {
     }
 }
 
-
 async function filtrarPorMarca(marcaId) {
     try {
 
         const response = await fetch(
-            `https://localhost:7049/api/Catalogo/marca/${marcaId}`
+            `${API_URL}/api/Catalogo/marca/${marcaId}`
         );
 
         const zapatillas = await response.json();

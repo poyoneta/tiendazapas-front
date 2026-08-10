@@ -1,5 +1,3 @@
-const urlBase = "https://localhost:7049";
-
 let currentProduct = null;
 let variants = [];
 
@@ -33,8 +31,8 @@ async function loadProduct() {
      document.getElementById("product-title").textContent = "Cargando...";
     try {
     const [productResponse, variantsResponse] = await Promise.all([
-        fetch(`${urlBase}/api/Catalogo/${productId}`),
-        fetch(`${urlBase}/api/Catalogo/variantes/${productId}`)
+        fetch(`${API_URL}/api/Catalogo/${productId}`),
+        fetch(`${API_URL}/api/Catalogo/variantes/${productId}`)
     ]);
 
     if (!productResponse.ok || !variantsResponse.ok) {
