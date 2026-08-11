@@ -1,22 +1,18 @@
-const API_URL = "https://apitiendazapatillas.onrender.com";
+const API_URL = "https://apitiendazapatillas-1.onrender.com";
 
 let products = [];
 
 async function cargarProductos() {
     const grid = document.getElementById('products-grid');
-    if (!grid) return; // no estamos en index.html, no hace falta el catálogo completo
+    if (!grid) return;
 
     try {
-        const response = await fetch(
-            `${API_URL}/api/Catalogo`
-        );
-
+        const response = await fetchConReintento(`${API_URL}/api/Catalogo`);
         products = await response.json();
-        console.log(products);
         renderProducts();
-
     } catch (error) {
         console.error(error);
+        grid.innerHTML = `<p>No se pudieron cargar los productos. Recargá la página.</p>`;
     }
 }
 

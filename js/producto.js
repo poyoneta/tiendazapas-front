@@ -31,13 +31,9 @@ async function loadProduct() {
      document.getElementById("product-title").textContent = "Cargando...";
     try {
     const [productResponse, variantsResponse] = await Promise.all([
-        fetch(`${API_URL}/api/Catalogo/${productId}`),
-        fetch(`${API_URL}/api/Catalogo/variantes/${productId}`)
+        fetchConReintento(`${API_URL}/api/Catalogo/${productId}`),
+        fetchConReintento(`${API_URL}/api/Catalogo/variantes/${productId}`)
     ]);
-
-    if (!productResponse.ok || !variantsResponse.ok) {
-        throw new Error(`Error al obtener datos: ${productResponse.status} / ${variantsResponse.status}`);
-    }
 
     currentProduct = await productResponse.json();
     variants = await variantsResponse.json();
@@ -49,7 +45,7 @@ async function loadProduct() {
 
 } catch (error) {
     console.error("Error al cargar el producto:", error);
-    document.getElementById("product-title").textContent = "Error al cargar el producto";
+    document.getElementById("product-title").textContent = "No se pudo cargar el producto. Recargá la página.";
 }
 }
 
@@ -138,7 +134,15 @@ function addToCartFromDetail() {
     const variante = variants.find(v => v.talla === selectedSize && v.color.id === selectedColor);
     if (!variante) return;
 
-    // Asegúrate de que addToCart esté definida en tu archivo app.js
-    addToCart(currentProduct.id, selectedSize, selectedColor, quantity);
+    addToCart({
+        id: currentProduct.id,
+        name: currentProduct.nombre,
+        price: variante.precio,
+        image: currentProduct.imagenes?.[0]?.url || 'img/placeholder.jpg',
+        size: selectedSize,
+        color: variante.color.nombre,
+        quantity: quantity
+    });
+
     openCart();
 }
