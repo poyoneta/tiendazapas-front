@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UltraSneakers - Acceso</title>
+
+  <!-- Tipografías: Bebas Neue (display, look de póster urbano) + Inter (texto) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+ <link rel="stylesheet" href="styles/login-style.css" />
+</head>
+<body>
+
+  <!-- ============================================
+       FONDO ANIMADO ESTILO "STEAM"
+       Dos filas de zapatillas moviéndose en direcciones
+       opuestas + blur + overlay oscuro encima.
+       ============================================ -->
+  <div class="fondo-animado" aria-hidden="true">
+    <div class="fondo-blur">
+      <div class="fila fila-1">
+        <div class="track">
+          <img src="https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=700&q=60&auto=format" alt="" />
+          <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=700&q=60&auto=format" alt="" />
+          <img src="https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?w=700&q=60&auto=format" alt="" />
+          <img src="https://images.unsplash.com/photo-1519415943484-9fa1873496d4?w=700&q=60&auto=format" alt="" />
+          <!-- duplicado para loop infinito sin cortes -->
+          <img src="https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=700&q=60&auto=format" alt="" />
+          <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=700&q=60&auto=format" alt="" />
+          <img src="https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?w=700&q=60&auto=format" alt="" />
+          <img src="https://images.unsplash.com/photo-1519415943484-9fa1873496d4?w=700&q=60&auto=format" alt="" />
+        </div>
+      </div>
+      <div class="fila fila-2">
+        <div class="track track-reversa">
+          <img src="https://images.unsplash.com/photo-1465479423260-c4afc24172c6?w=700&q=60&auto=format" alt="" />
+          <img src="https://images.unsplash.com/photo-1552346154-21d32810aba3?w=700&q=60&auto=format" alt="" />
+          <img src="https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?w=700&q=60&auto=format" alt="" />
+          <img src="https://images.unsplash.com/photo-1519415943484-9fa1873496d4?w=700&q=60&auto=format" alt="" />
+          <img src="https://images.unsplash.com/photo-1465479423260-c4afc24172c6?w=700&q=60&auto=format" alt="" />
+          <img src="https://images.unsplash.com/photo-1552346154-21d32810aba3?w=700&q=60&auto=format" alt="" />
+          <img src="https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?w=700&q=60&auto=format" alt="" />
+          <img src="https://images.unsplash.com/photo-1519415943484-9fa1873496d4?w=700&q=60&auto=format" alt="" />
+        </div>
+      </div>
+    </div>
+    <div class="fondo-overlay"></div>
+  </div>
+
+  <!-- ============================================
+       TARJETA CENTRAL - LOGIN / REGISTRO
+       ============================================ -->
+  <main class="contenedor-principal">
+    <div class="tarjeta-auth" id="tarjeta-auth">
+
+      <div class="marca">
+        <span class="marca-icono">US</span>
+        <span class="marca-texto">UltraSneakers</span>
+      </div>
+
+      <h1 id="titulo">Iniciar Sesión</h1>
+      <p class="subtitulo">Entrá a tu cuenta para seguir con tu compra</p>
+
+      <form id="form-auth" novalidate>
+
+        <!-- Nombre: solo se usa/ve en el modo Registro. Arranca oculto (modo Login) -->
+        <div class="campo campo-nombre oculto" id="campo-nombre">
+          <label for="nombre">Nombre</label>
+          <input type="text" id="nombre" name="nombre" placeholder="Tu nombre completo" autocomplete="name" />
+        </div>
+
+        <div class="campo">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" placeholder="tu@email.com" autocomplete="email" required />
+        </div>
+
+        <div class="campo">
+          <label for="password">Contraseña</label>
+          <input type="password" id="password" name="password" placeholder="••••••••" autocomplete="current-password" required />
+        </div>
+
+        <!-- Mensajes de éxito / error (la lógica de Supabase le agrega clase .exito o .error) -->
+        <p class="mensaje" id="mensaje"></p>
+
+        <button type="submit" class="boton boton-primario" id="boton-submit">Ingresar</button>
+
+        <div class="separador"><span>o</span></div>
+
+        <button type="button" class="boton boton-google" id="boton-google">
+          <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">
+            <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.5 6 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/>
+            <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.5 6 29.5 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/>
+            <path fill="#4CAF50" d="M24 44c5.4 0 10.3-1.8 14.1-5l-6.5-5.5C29.5 35.1 26.9 36 24 36c-5.3 0-9.7-3.4-11.3-8.1l-6.6 5.1C9.5 39.6 16.2 44 24 44z"/>
+            <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.3 5.7l6.5 5.5C40.5 36.5 44 30.9 44 24c0-1.3-.1-2.7-.4-3.5z"/>
+          </svg>
+          <span>Continuar con Google</span>
+        </button>
+
+      </form>
+
+      <p class="texto-cambio" id="texto-cambio">
+        <span id="texto-cambio-pregunta">¿No tenés cuenta?</span> <a href="#" id="link-cambio">Registrate</a>
+      </p>
+
+    </div>
+  </main>
+
+  <!-- Librería de Supabase (expone el global `supabase` que usa login-app.js) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/login-app.js"></script>
+</body>
+</html>
