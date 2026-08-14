@@ -36,6 +36,20 @@ function agregarEventosFiltro() {
 
 }
 
+// Busca la imagen principal entre los colorways de una zapatilla.
+// En el listado (/api/Catalogo), cada colorway ya trae SOLO su imagen
+// Es_Principal (si tiene una) — recorremos los colorways hasta encontrar la primera.
+function obtenerImagenPrincipal(product) {
+    const colorways = product.zapatillaColores || [];
+
+    for (const zc of colorways) {
+        const imagenes = zc.imagenes || [];
+        if (imagenes.length > 0) return imagenes[0].url;
+    }
+
+    return "img/placeholder.jpg";
+}
+
 // ===== RENDERIZAR PRODUCTOS =====
 function renderProducts(lista = products) {
     const grid = document.getElementById('products-grid');
@@ -45,9 +59,7 @@ function renderProducts(lista = products) {
 }
 
 function createProductCard(product) {
-   const imagenUrl = (product.imagenes && product.imagenes.length > 0) 
-        ? product.imagenes[0].url 
-        : "img/placeholder.jpg";
+    const imagenUrl = obtenerImagenPrincipal(product);
 
     return `
         <a href="producto.html?id=${product.id}" style="text-decoration:none;color:inherit;">
@@ -66,10 +78,9 @@ function createProductCard(product) {
     `;
 }
 
-// ===== FILTROS =====
-
-
 // ===== CARRITO =====
+// Agrega rápido desde el listado (index.html), sin elegir color/talle.
+// El precio se ajusta recién cuando el usuario entra a producto.html y elige variante.
 function quickAddToCart(productId) {
     const product = products.find(p => p.id === productId);
     if (!product) return;
@@ -82,8 +93,8 @@ function quickAddToCart(productId) {
         cart.push({
             id: product.id,
             name: product.nombre,
-            price: 0, // o lo que venga de la API si después lo agregás
-            image: "placeholder.jpg",
+            price: 0, // se ajusta en producto.html al elegir color/talle
+            image: obtenerImagenPrincipal(product),
             size: "default",
             color: "default",
             quantity: 1
@@ -95,30 +106,21 @@ function quickAddToCart(productId) {
     showToast("Producto añadido al carrito");
 }
 
-function addToCart(productId, size, color, quantity) {
-    const product = products.find(p => p.id === productId);
-    if (!product) return;
-
-    const existingItem = cart.find(item => 
-        item.id === productId && 
-        item.size === size && 
-        item.color === color
+// Agrega un item completo ya armado (usado desde producto.js, con
+// color/talle/precio/imagen ya resueltos por la variante elegida)
+function addToCart(item) {
+    const existingItem = cart.find(i =>
+        i.id === item.id &&
+        i.size === item.size &&
+        i.color === item.color
     );
-    
+
     if (existingItem) {
-        existingItem.quantity += quantity;
+        existingItem.quantity += item.quantity;
     } else {
-        cart.push({
-            id: product.id,
-            name: product.nombre,
-            price: product.precio,
-            image: product.imagenes[0], 
-            size: size,
-            color: color,
-            quantity: quantity
-        });
+        cart.push(item);
     }
-    
+
     saveCart();
     updateCartCount();
     showToast('Producto añadido al carrito');
@@ -133,7 +135,7 @@ function removeFromCart(index) {
 
 function updateCartItemQuantity(index, change) {
     const newQty = cart[index].quantity + change;
-    
+
     if (newQty <= 0) {
         removeFromCart(index);
     } else if (newQty <= 10) {
@@ -160,7 +162,7 @@ function renderCartItems() {
     const container = document.getElementById('cart-items');
     const footer = document.getElementById('cart-footer');
     const totalEl = document.getElementById('cart-total-amount');
-    
+
     if (!container) return;
 
     if (cart.length === 0) {
@@ -223,7 +225,7 @@ function toggleWishlist(productId) {
             wishlist.push({
                 id: product.id,
                 name: product.nombre,
-                image: "placeholder.jpg",
+                image: obtenerImagenPrincipal(product),
                 category: product.marca?.nombre || "Sin marca"
             });
 
@@ -289,8 +291,7 @@ function renderWishlistItems() {
             </div>
             <div class="item-details">
                 <p class="item-name">${item.name}</p>
-                <p class="item-info">${categoryNames[item.category]}</p>
-                <p class="item-price">$${item.price.toFixed(2)}</p>
+                <p class="item-info">${item.category}</p>
                 <div class="item-actions">
                     <button class="btn btn-primary btn-small" onclick="moveToCart(${item.id})">
                         Añadir al carrito
@@ -350,11 +351,9 @@ function goToCheckout() {
 
 // ===== TOAST NOTIFICATIONS =====
 function showToast(message) {
-    // Remove existing toast
     const existingToast = document.querySelector('.toast');
     if (existingToast) existingToast.remove();
 
-    // Create new toast
     const toast = document.createElement('div');
     toast.className = 'toast success';
     toast.innerHTML = `
@@ -365,12 +364,10 @@ function showToast(message) {
     `;
     document.body.appendChild(toast);
 
-    // Trigger animation
     requestAnimationFrame(() => {
         toast.classList.add('active');
     });
 
-    // Remove after delay
     setTimeout(() => {
         toast.classList.remove('active');
         setTimeout(() => toast.remove(), 300);
