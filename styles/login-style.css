@@ -1,0 +1,424 @@
+/* ================================================
+   ULTRASNEAKERS — LOGIN / REGISTRO
+   Paleta: noche urbana + naranja "sneaker drop" + cian neón
+   ================================================ */
+
+:root {
+  --bg-deep: #0a0a0f;
+  --bg-deep-2: #14121c;
+  --panel: rgba(255, 255, 255, 0.06);
+  --panel-border: rgba(255, 255, 255, 0.14);
+  --texto: #f5f5f0;
+  --texto-muted: #a3a3ad;
+  --naranja: #ff4d2e;
+  --naranja-fuerte: #ff2d55;
+  --cian: #fdfdfd;
+  --error: #ff5c6c;
+  --exito: #3ddc97;
+
+  --radius-tarjeta: 24px;
+  --radius-input: 12px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: var(--texto);
+  background: var(--bg-deep);
+  overflow-x: hidden;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* ================================================
+   FONDO ANIMADO ESTILO "STEAM"
+   Dos filas de zapatillas desplazándose en loop
+   infinito, en direcciones opuestas, con blur
+   y overlay oscuro para que no compita con la tarjeta.
+   ================================================ */
+
+.fondo-animado {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: radial-gradient(circle at 30% 20%, var(--bg-deep-2), var(--bg-deep) 70%);
+}
+
+.fondo-blur {
+  position: absolute;
+  inset: -5%;
+  filter: blur(6px) brightness(0.55) saturate(1.1);
+  transform: rotate(-4deg) scale(1.15);
+}
+
+.fila {
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.fila-1 { margin-top: 6vh; }
+.fila-2 { margin-top: 14vh; }
+
+.track {
+  display: inline-flex;
+  gap: 24px;
+  animation: deslizar-izquierda 60s linear infinite;
+}
+
+.track-reversa {
+  animation-name: deslizar-derecha;
+  animation-duration: 75s;
+}
+
+.track img {
+  height: 34vh;
+  min-height: 220px;
+  width: auto;
+  border-radius: 18px;
+  object-fit: cover;
+  opacity: 0.9;
+}
+
+@keyframes deslizar-izquierda {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@keyframes deslizar-derecha {
+  from { transform: translateX(-50%); }
+  to   { transform: translateX(0); }
+}
+
+.fondo-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(160deg, rgba(10, 10, 15, 0.75) 0%, rgba(10, 10, 15, 0.9) 55%, rgba(10, 10, 15, 0.97) 100%);
+}
+
+/* ================================================
+   LAYOUT CENTRAL
+   ================================================ */
+
+.contenedor-principal {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+/* ================================================
+   TARJETA GLASSMORPHISM
+   ================================================ */
+
+.tarjeta-auth {
+  --hue: 0deg; /* Login = colorway naranja. Registro rota el matiz (ver .modo-registro) */
+  width: 100%;
+  max-width: 420px;
+  padding: 40px 36px;
+  border-radius: var(--radius-tarjeta);
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.02) inset,
+    0 1px 0 rgba(255, 255, 255, 0.08) inset;
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow 0.4s ease;
+}
+
+/* Modo Registro: el JS agrega esta clase al contenedor .tarjeta-auth.
+   Rotar el matiz cambia el "colorway" (naranja -> magenta/cian) de forma
+   perceptible pero sin duplicar reglas de color. */
+.tarjeta-auth.modo-registro {
+  --hue: 200deg;
+}
+
+/* franja de acento superior, marca de "colorway" de zapatilla */
+.tarjeta-auth::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--naranja), var(--naranja-fuerte), var(--cian));
+  filter: hue-rotate(var(--hue));
+  transition: filter 0.45s ease;
+}
+
+.marca {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+.marca-icono {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  letter-spacing: 0.5px;
+  background: linear-gradient(135deg, var(--naranja), var(--naranja-fuerte));
+  color: #0a0a0f;
+}
+
+.marca-texto {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  letter-spacing: 1.5px;
+  color: var(--texto);
+}
+
+#titulo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 42px;
+  line-height: 1;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.subtitulo {
+  color: var(--texto-muted);
+  font-size: 14px;
+  margin-bottom: 28px;
+}
+
+/* ================================================
+   FORMULARIO
+   ================================================ */
+
+.campo {
+  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow: hidden;
+  max-height: 90px;
+  opacity: 1;
+  transform: translateY(0);
+  transition: max-height 0.38s ease, opacity 0.28s ease, transform 0.32s ease, margin-bottom 0.38s ease;
+}
+
+/* Estado oculto del campo Nombre (modo Login). El JS solo agrega/saca esta clase */
+.campo.oculto {
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-8px);
+  margin-bottom: 0;
+  pointer-events: none;
+}
+
+.campo label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--texto-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.campo input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-input);
+  padding: 13px 14px;
+  font-size: 15px;
+  color: var(--texto);
+  font-family: inherit;
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.campo input::placeholder {
+  color: rgba(245, 245, 240, 0.35);
+}
+
+.campo input:focus {
+  outline: none;
+  border-color: var(--naranja);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 4px rgba(255, 77, 46, 0.15);
+}
+
+/* Mensaje de éxito / error — la lógica de Supabase agrega .exito o .error */
+.mensaje {
+  min-height: 18px;
+  font-size: 13.5px;
+  margin-bottom: 6px;
+  text-align: center;
+}
+
+.mensaje.error { color: var(--error); }
+.mensaje.exito { color: var(--exito); }
+
+/* ================================================
+   BOTONES
+   ================================================ */
+
+.boton {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: var(--radius-input);
+  font-size: 15px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+
+.boton:active {
+  transform: scale(0.98);
+}
+
+.boton-primario {
+  background: linear-gradient(90deg, var(--naranja), var(--naranja-fuerte));
+  color: #0a0a0f;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 4px;
+  box-shadow: 0 8px 24px rgba(255, 45, 85, 0.35);
+  filter: hue-rotate(var(--hue));
+  transition: filter 0.45s ease, box-shadow 0.4s ease, transform 0.15s ease;
+}
+
+.boton-primario:hover {
+  filter: hue-rotate(var(--hue)) brightness(1.08);
+  box-shadow: 0 10px 30px rgba(255, 45, 85, 0.5);
+}
+
+.separador {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: var(--texto-muted);
+  font-size: 12px;
+  margin: 20px 0;
+}
+
+.separador::before,
+.separador::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--panel-border);
+}
+
+.separador span {
+  padding: 0 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.boton-google {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--panel-border);
+  color: var(--texto);
+}
+
+.boton-google:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+/* ================================================
+   TEXTO DE CAMBIO LOGIN / REGISTRO
+   ================================================ */
+
+.texto-cambio {
+  margin-top: 24px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--texto-muted);
+}
+
+.texto-cambio a {
+  color: var(--cian);
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease;
+}
+
+.texto-cambio a:hover {
+  border-color: var(--cian);
+}
+
+/* ================================================
+   ANIMACIÓN AL ALTERNAR LOGIN / REGISTRO
+   El JS agrega estas clases por un instante cada vez
+   que se cambia de modo, para que el cambio se note.
+   ================================================ */
+
+@keyframes pulso-tarjeta {
+  0%   { transform: scale(1); }
+  45%  { transform: scale(1.015); }
+  100% { transform: scale(1); }
+}
+
+.tarjeta-auth.destacar {
+  animation: pulso-tarjeta 0.4s ease;
+}
+
+@keyframes entrada-suave {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+#titulo.destacar,
+#texto-cambio.destacar,
+#boton-submit.destacar {
+  animation: entrada-suave 0.32s ease;
+}
+
+/* ================================================
+   RESPONSIVE
+   ================================================ */
+
+@media (max-width: 480px) {
+  .tarjeta-auth {
+    padding: 32px 24px;
+    border-radius: 20px;
+  }
+
+  #titulo {
+    font-size: 34px;
+  }
+
+  .track img {
+    height: 22vh;
+    min-height: 140px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .track {
+    animation: none;
+  }
+}
