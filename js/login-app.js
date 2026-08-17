@@ -19,6 +19,13 @@ const botonGoogle = document.getElementById("boton-google");
 
 let modoRegistro = false; // false = login, true = registro
 
+// Página a la que hay que volver después de loguearse — la guardó auth.js
+// justo antes de que el usuario navegara a login.html. Si no hay ninguna
+// guardada (ej: entró directo a login.html), volvemos al inicio.
+function obtenerPaginaDeRetorno() {
+    return sessionStorage.getItem("paginaAntesDeLogin") || "/index.html";
+}
+
 // Dispara la animación de "cambio notorio" (pulso + entrada suave) sin
 // acumular listeners ni recrear elementos del DOM.
 function animarCambioDeModo() {
@@ -133,17 +140,28 @@ form.addEventListener("submit", async (e) => {
     mostrarMensaje("¡Bienvenido!", "exito");
     console.log("Sesión iniciada:", data);
 
-    // Pequeña pausa para que se alcance a ver el mensaje antes de redirigir
+    // Pequeña pausa para que se alcance a ver el mensaje antes de redirigir,
+    // y volvemos a la página donde estaba el usuario antes de venir a loguearse.
+    const paginaDestino = obtenerPaginaDeRetorno();
+    sessionStorage.removeItem("paginaAntesDeLogin");
+
     setTimeout(() => {
-      window.location.href = "index.html";
+      window.location.href = paginaDestino;
     }, 900);
   }
 });
 
 // Login con Google
 botonGoogle.addEventListener("click", async () => {
+  // Google redirige de vuelta automáticamente vía Supabase — le pasamos
+  // explícitamente a qué URL volver (la página de origen guardada por auth.js).
+  const paginaDestino = obtenerPaginaDeRetorno();
+
   const { error } = await supabaseClient.auth.signInWithOAuth({
     provider: "google",
+    options: {
+      redirectTo: `${window.location.origin}${paginaDestino}`,
+    },
   });
 
   if (error) {
