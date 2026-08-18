@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backoffice - Gestión de Zapatillas</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+    <!-- Pantalla de Carga -->
+    <div id="loading-screen" style="text-align: center; padding: 50px; font-family: sans-serif;">
+        <h2>Verificando credenciales de administrador...</h2>
+    </div>
+
+    <!-- Panel de Administración -->
+    <div id="admin-dashboard" style="display: none; padding: 20px; font-family: sans-serif;">
+        <header style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 10px;">
+            <h1>Panel de Control - Tienda Zapas</h1>
+            <button id="logout-btn" style="padding: 8px 16px; cursor: pointer;">Cerrar Sesión</button>
+        </header>
+
+        <main style="margin-top: 20px;">
+            <!-- Sección Formulario Zapatilla -->
+            <section style="background: #f4f4f4; padding: 15px; border-radius: 8px; margin-bottom: 30px;">
+                <h3 id="form-title">Agregar Nueva Zapatilla</h3>
+                <form id="zapatilla-form">
+                    <input type="hidden" id="zapatilla-id">
+                    
+                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                        <input type="text" id="nombre" placeholder="Nombre de la zapatilla" required style="flex: 1; padding: 8px;">
+                        <input type="number" id="precio" placeholder="Precio ($)" step="0.01" required style="width: 150px; padding: 8px;">
+                        <input type="number" id="precio-oferta" placeholder="Precio Oferta ($)" step="0.01" style="width: 150px; padding: 8px;">
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                        <select id="marca-select" style="flex: 1; padding: 8px;" required>
+                            <option value="">Seleccionar Marca</option>
+                        </select>
+                        <textarea id="descripcion" placeholder="Descripción breve" style="flex: 2; padding: 8px;"></textarea>
+                    </div>
+
+                    <button type="submit" id="save-btn" style="padding: 10px 20px; background: #28a745; color: white; border: none; cursor: pointer;">Guardar Zapatilla</button>
+                    <button type="button" id="cancel-btn" style="display: none; padding: 10px 20px; background: #6c757d; color: white; border: none; cursor: pointer;">Cancelar</button>
+                </form>
+            </section>
+
+            <!-- Lista de Zapatillas con sus Variantes -->
+            <section>
+                <h3>Catálogo Actual</h3>
+                <table border="1" cellpadding="8" cellspacing="0" style="width: 100%; border-collapse: collapse; text-align: left;">
+                    <thead>
+                        <tr style="background: #eee;">
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Precio</th>
+                            <th>Precio Oferta</th>
+                            <th>Variantes (Talles / Colores / Stock)</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="zapatillas-table-body">
+                        <!-- Se llena dinámicamente -->
+                    </tbody>
+                </table>
+            </section>
+        </main>
+    </div>
+
+    <script src="js/admin.js"></script>
+</body>
+</html>
