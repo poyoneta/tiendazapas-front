@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Backoffice - UltraSneakers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/backoffice.css">
+</head>
+<body>
+
+<div id="cargando">Verificando acceso…</div>
+
+<div id="app">
+  <header class="topbar">
+    <div class="topbar-left">
+      <span class="logo">UltraSneakers</span>
+      <span class="badge-admin">Backoffice</span>
+    </div>
+    <div class="topbar-right">
+      <span id="admin-nombre"></span>
+      <a href="index.html">Volver a la tienda</a>
+      <a href="#" id="cerrar-sesion">Cerrar sesión</a>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="sidebar">
+      <button data-seccion="marcas" class="activo">Marcas</button>
+      <button data-seccion="colores">Colores</button>
+      <button data-seccion="zapatillas">Zapatillas</button>
+      <button data-seccion="colorways">Colorways</button>
+      <button data-seccion="variantes">Talles / Stock</button>
+      <button data-seccion="imagenes">Imágenes</button>
+      <button data-seccion="inventario">Inventario</button>
+      <button data-seccion="eliminar">Eliminar</button>
+    </nav>
+
+    <main class="contenido">
+
+      <!-- MARCAS -->
+      <section class="seccion activa" id="seccion-marcas">
+        <h2>Marcas</h2>
+        <p class="desc">Creá las marcas que después vas a asociar a cada zapatilla.</p>
+        <div class="card">
+          <h3>Nueva marca</h3>
+          <form id="form-marca">
+            <div class="fila-2">
+              <div class="campo"><label>Nombre</label><input type="text" id="marca-nombre" required></div>
+              <div class="campo"><label>Logo (URL)</label><input type="url" id="marca-logo" placeholder="https://..."></div>
+            </div>
+            <button class="btn" type="submit">Crear marca</button>
+            <div class="mensaje" id="msg-marca"></div>
+          </form>
+        </div>
+        <div class="card">
+          <h3>Marcas existentes</h3>
+          <table><thead><tr><th>Id</th><th>Nombre</th><th>Logo</th></tr></thead><tbody id="tabla-marcas"></tbody></table>
+        </div>
+      </section>
+
+      <!-- COLORES -->
+      <section class="seccion" id="seccion-colores">
+        <h2>Colores</h2>
+        <p class="desc">Colores disponibles para armar los colorways de cada zapatilla.</p>
+        <div class="card">
+          <h3>Nuevo color</h3>
+          <form id="form-color">
+            <div class="fila-2">
+              <div class="campo"><label>Nombre</label><input type="text" id="color-nombre" required></div>
+              <div class="campo"><label>Hex</label><input type="text" id="color-hex" placeholder="#FF4D2E" required></div>
+            </div>
+            <button class="btn" type="submit">Crear color</button>
+            <div class="mensaje" id="msg-color"></div>
+          </form>
+        </div>
+        <p class="ayuda">
+          Nota: la API todavía no tiene un endpoint para listar los colores creados
+          (falta un GET, ej. <code>api/Catalogo/colores</code>). Por ahora, para armar un
+          colorway vas a necesitar recordar/anotar el Id de cada color que crees acá.
+        </p>
+      </section>
+
+      <!-- ZAPATILLAS -->
+      <section class="seccion" id="seccion-zapatillas">
+        <h2>Zapatillas</h2>
+        <p class="desc">Modelo base. Después le agregás colorways (color + fotos) y talles.</p>
+        <div class="card">
+          <h3>Nueva zapatilla</h3>
+          <form id="form-zapatilla">
+            <div class="campo">
+              <label>Marca</label>
+              <select id="zapatilla-marca" required></select>
+            </div>
+            <div class="campo"><label>Nombre</label><input type="text" id="zapatilla-nombre" required></div>
+            <div class="campo"><label>Descripción</label><textarea id="zapatilla-descripcion"></textarea></div>
+            <button class="btn" type="submit">Crear zapatilla</button>
+            <div class="mensaje" id="msg-zapatilla"></div>
+          </form>
+        </div>
+        <div class="card">
+          <h3>Catálogo actual</h3>
+          <table><thead><tr><th>Id</th><th>Marca</th><th>Nombre</th></tr></thead><tbody id="tabla-zapatillas"></tbody></table>
+        </div>
+      </section>
+
+      <!-- COLORWAYS -->
+      <section class="seccion" id="seccion-colorways">
+        <h2>Colorways</h2>
+        <p class="desc">Asociá una zapatilla con un color (esto genera el "ZapatillaColorId" que después usás para talles e imágenes).</p>
+        <div class="card">
+          <h3>Nuevo colorway</h3>
+          <form id="form-colorway">
+            <div class="fila-2">
+              <div class="campo">
+                <label>Zapatilla</label>
+                <select id="colorway-zapatilla" required></select>
+              </div>
+              <div class="campo">
+                <label>Id de color</label>
+                <input type="number" id="colorway-color" min="1" required>
+              </div>
+            </div>
+            <button class="btn" type="submit">Crear colorway</button>
+            <div class="mensaje" id="msg-colorway"></div>
+          </form>
+        </div>
+        <div class="card">
+          <h3>Colorways de la zapatilla seleccionada</h3>
+          <table><thead><tr><th>ZapatillaColorId</th><th>Color</th><th>Imágenes</th></tr></thead><tbody id="tabla-colorways"></tbody></table>
+        </div>
+      </section>
+
+      <!-- VARIANTES -->
+      <section class="seccion" id="seccion-variantes">
+        <h2>Talles / Stock (Variantes)</h2>
+        <p class="desc">Cada variante es un talle con su precio y stock, atado a un colorway puntual.</p>
+        <div class="card">
+          <h3>Nueva variante</h3>
+          <form id="form-variante">
+            <div class="campo">
+              <label>Zapatilla</label>
+              <select id="variante-zapatilla" required></select>
+            </div>
+            <div class="campo">
+              <label>Colorway</label>
+              <select id="variante-colorway" required></select>
+            </div>
+            <div class="fila-3">
+              <div class="campo"><label>Talla</label><input type="number" id="variante-talla" required></div>
+              <div class="campo"><label>Precio</label><input type="number" step="0.01" id="variante-precio" required></div>
+              <div class="campo"><label>Stock</label><input type="number" id="variante-stock" required></div>
+            </div>
+            <button class="btn" type="submit">Crear variante</button>
+            <div class="mensaje" id="msg-variante"></div>
+          </form>
+        </div>
+      </section>
+
+      <!-- IMAGENES -->
+      <section class="seccion" id="seccion-imagenes">
+        <h2>Imágenes</h2>
+        <p class="desc">Subí fotos para un colorway puntual (se guardan en Supabase Storage).</p>
+        <div class="card">
+          <h3>Subir imagen</h3>
+          <form id="form-imagen">
+            <div class="campo">
+              <label>Zapatilla</label>
+              <select id="imagen-zapatilla" required></select>
+            </div>
+            <div class="campo">
+              <label>Colorway</label>
+              <select id="imagen-colorway" required></select>
+            </div>
+            <div class="campo"><label>Archivo</label><input type="file" id="imagen-archivo" accept="image/*" required></div>
+            <div class="fila-2">
+              <div class="campo"><label>Orden</label><input type="number" id="imagen-orden" value="1" min="1"></div>
+              <div class="campo check" style="margin-top:22px;">
+                <input type="checkbox" id="imagen-principal"><label for="imagen-principal" style="margin:0;">Es la imagen principal</label>
+              </div>
+            </div>
+            <button class="btn" type="submit">Subir imagen</button>
+            <div class="mensaje" id="msg-imagen"></div>
+          </form>
+        </div>
+      </section>
+
+      <!-- INVENTARIO -->
+      <section class="seccion" id="seccion-inventario">
+        <h2>Inventario</h2>
+        <p class="desc">Variantes con stock por debajo de 5 unidades.</p>
+        <div class="card">
+          <button class="btn secundario" id="btn-refrescar-stock" type="button">Actualizar lista</button>
+          <table style="margin-top:14px;">
+            <thead><tr><th>Id</th><th>Color</th><th>Talla</th><th>Stock</th><th>Nuevo stock</th></tr></thead>
+            <tbody id="tabla-stock-bajo"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ELIMINAR -->
+      <section class="seccion" id="seccion-eliminar">
+        <h2>Eliminar</h2>
+        <p class="desc">Estas acciones no se pueden deshacer.</p>
+        <div class="card">
+          <h3>Eliminar zapatilla</h3>
+          <p class="ayuda">Borra la zapatilla, sus colorways, variantes y las imágenes del storage.</p>
+          <div class="campo">
+            <select id="eliminar-zapatilla"></select>
+          </div>
+          <button class="btn peligro" id="btn-eliminar-zapatilla" type="button">Eliminar zapatilla</button>
+          <div class="mensaje" id="msg-eliminar-zapatilla"></div>
+        </div>
+        <div class="card">
+          <h3>Eliminar variante (talle)</h3>
+          <div class="fila-2">
+            <div class="campo">
+              <label>Zapatilla</label>
+              <select id="eliminar-var-zapatilla"></select>
+            </div>
+            <div class="campo">
+              <label>Colorway</label>
+              <select id="eliminar-var-colorway"></select>
+            </div>
+          </div>
+          <div class="campo">
+            <label>Variante</label>
+            <select id="eliminar-variante"></select>
+          </div>
+          <button class="btn peligro" id="btn-eliminar-variante" type="button">Eliminar variante</button>
+          <div class="mensaje" id="msg-eliminar-variante"></div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/backoffice.js"></script>
+</body>
+</html>

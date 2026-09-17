@@ -19,19 +19,15 @@ const botonGoogle = document.getElementById("boton-google");
 
 let modoRegistro = false; // false = login, true = registro
 
-// Página a la que hay que volver después de loguearse — la guardó auth.js
-// justo antes de que el usuario navegara a login.html. Si no hay ninguna
-// guardada (ej: entró directo a login.html), volvemos al inicio.
+// Página a la que hay que volver después de loguearse
 function obtenerPaginaDeRetorno() {
-    return sessionStorage.getItem("paginaAntesDeLogin") || "/index.html";
+    return sessionStorage.getItem("paginaAntesDeLogin") || "index.html";
 }
 
-// Dispara la animación de "cambio notorio" (pulso + entrada suave) sin
-// acumular listeners ni recrear elementos del DOM.
+// Dispara la animación de "cambio notorio"
 function animarCambioDeModo() {
   const elementos = [tarjeta, titulo, textoCambio, botonSubmit];
   elementos.forEach((el) => el.classList.remove("destacar"));
-  // Forzar reflow para poder re-disparar la animación si se hace click rápido
   void tarjeta.offsetWidth;
   elementos.forEach((el) => el.classList.add("destacar"));
 }
@@ -64,7 +60,7 @@ linkCambio.addEventListener("click", (e) => {
   animarCambioDeModo();
 });
 
-// Muestra un mensaje de éxito o error usando clases (en vez de estilos inline)
+// Muestra un mensaje de éxito o error
 function mostrarMensaje(texto, tipo) {
   mensaje.textContent = texto;
   mensaje.classList.remove("exito", "error");
@@ -78,7 +74,6 @@ form.addEventListener("submit", async (e) => {
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value.trim();
 
-  // El form tiene novalidate, así que validamos acá antes de llamar a Supabase
   if (!email || !password) {
     mostrarMensaje("Completá tu email y tu contraseña.", "error");
     return;
@@ -120,9 +115,6 @@ form.addEventListener("submit", async (e) => {
       return;
     }
 
-    // Por seguridad (evitar que se pueda "adivinar" qué emails existen),
-    // Supabase no siempre devuelve error si el email ya está registrado:
-    // en su lugar responde éxito pero con un user.identities vacío.
     if (data?.user && data.user.identities && data.user.identities.length === 0) {
       mostrarMensaje("Ese email ya tiene una cuenta. Iniciá sesión en su lugar.", "error");
       return;
@@ -130,6 +122,7 @@ form.addEventListener("submit", async (e) => {
 
     mostrarMensaje("¡Cuenta creada! Revisá tu email para confirmarla o iniciá sesión.", "exito");
   } else {
+    // 1. Iniciar sesión con Supabase
     const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
     if (error) {
@@ -138,13 +131,29 @@ form.addEventListener("submit", async (e) => {
     }
 
     mostrarMensaje("¡Bienvenido!", "exito");
-    console.log("Sesión iniciada:", data);
 
-    // Pequeña pausa para que se alcance a ver el mensaje antes de redirigir,
-    // y volvemos a la página donde estaba el usuario antes de venir a loguearse.
-    const paginaDestino = obtenerPaginaDeRetorno();
+    // 2. Definir destino por defecto
+    let paginaDestino = obtenerPaginaDeRetorno();
+
+    // 3. Consultar rol en la tabla profiles para redirigir
+    try {
+      const { data: profile } = await supabaseClient
+        .from('profiles')
+        .select('role')
+        .eq('id', data.user.id)
+        .maybeSingle();
+
+      // Si tiene rol admin, forzamos la ruta a admin.html
+      if (profile && profile.role === 'admin') {
+        paginaDestino = 'admin.html';
+      }
+    } catch (err) {
+      console.error("Error al consultar el rol:", err);
+    }
+
     sessionStorage.removeItem("paginaAntesDeLogin");
 
+    // 4. Redireccionar tras la animación/mensaje
     setTimeout(() => {
       window.location.href = paginaDestino;
     }, 900);
@@ -153,14 +162,12 @@ form.addEventListener("submit", async (e) => {
 
 // Login con Google
 botonGoogle.addEventListener("click", async () => {
-  // Google redirige de vuelta automáticamente vía Supabase — le pasamos
-  // explícitamente a qué URL volver (la página de origen guardada por auth.js).
   const paginaDestino = obtenerPaginaDeRetorno();
 
   const { error } = await supabaseClient.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${window.location.origin}${paginaDestino}`,
+      redirectTo: `${window.location.origin}/${paginaDestino}`,
     },
   });
 
