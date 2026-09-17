@@ -11,23 +11,45 @@ const ROL_ADMIN = "Admin";
 
 // Consulta en Supabase si el usuario logueado es Admin, mirando
 // profiles.rol_id -> roles.nombre. Devuelve true/false.
-// (Requiere que "profiles" tenga una policy de SELECT para el propio usuario
-// y que "roles" sea legible; ver nota al pie del archivo.)
+// Se hace en 2 consultas simples (en vez de un "embed" profiles->roles)
+// para no depender de que Supabase tenga detectada la Foreign Key entre
+// ambas tablas — si esa relación no está bien armada, un embed like
+// "roles(nombre)" falla con un error de "relationship not found".
 async function esUsuarioAdmin(session) {
     if (!session || !session.user) return false;
 
-    const { data: perfil, error } = await authClient
-        .from("profiles")
-        .select("rol_id, roles(nombre)")
-        .eq("id", session.user.id)
-        .single();
+    try {
+        const { data: perfil, error: errorPerfil } = await authClient
+            .from("profiles")
+            .select("rol_id")
+            .eq("id", session.user.id)
+            .maybeSingle();
 
-    if (error || !perfil) {
-        console.warn("No se pudo verificar el rol del usuario:", error?.message);
+        if (errorPerfil) {
+            console.error("Error leyendo profiles:", errorPerfil.message);
+            return false;
+        }
+        if (!perfil || !perfil.rol_id) {
+            console.warn("El usuario no tiene fila en 'profiles' o no tiene rol_id asignado.");
+            return false;
+        }
+
+        const { data: rol, error: errorRol } = await authClient
+            .from("roles")
+            .select("nombre")
+            .eq("id", perfil.rol_id)
+            .maybeSingle();
+
+        if (errorRol) {
+            console.error("Error leyendo roles:", errorRol.message);
+            return false;
+        }
+
+        return rol?.nombre === ROL_ADMIN;
+    } catch (e) {
+        console.error("Excepción verificando rol de admin:", e);
         return false;
     }
-
-    return perfil.roles?.nombre === ROL_ADMIN;
 }
 
 // Muestra el bloque de "Iniciar sesión" o el de usuario logueado
