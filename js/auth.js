@@ -6,11 +6,36 @@ const AUTH_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJ
 const { createClient } = supabase;
 const authClient = createClient(AUTH_SUPABASE_URL, AUTH_SUPABASE_ANON_KEY);
 
+// Nombre exacto del rol de administrador en la tabla "roles" (columna "nombre").
+const ROL_ADMIN = "Admin";
+
+// Consulta en Supabase si el usuario logueado es Admin, mirando
+// profiles.rol_id -> roles.nombre. Devuelve true/false.
+// (Requiere que "profiles" tenga una policy de SELECT para el propio usuario
+// y que "roles" sea legible; ver nota al pie del archivo.)
+async function esUsuarioAdmin(session) {
+    if (!session || !session.user) return false;
+
+    const { data: perfil, error } = await authClient
+        .from("profiles")
+        .select("rol_id, roles(nombre)")
+        .eq("id", session.user.id)
+        .single();
+
+    if (error || !perfil) {
+        console.warn("No se pudo verificar el rol del usuario:", error?.message);
+        return false;
+    }
+
+    return perfil.roles?.nombre === ROL_ADMIN;
+}
+
 // Muestra el bloque de "Iniciar sesión" o el de usuario logueado
 function actualizarUISesion(session) {
     const loginLink = document.getElementById("login-link");
     const userInfo = document.getElementById("user-info");
     const userName = document.getElementById("user-name");
+    const backofficeLink = document.getElementById("backoffice-link");
 
     // Si el header de esta página no tiene estos elementos, no hacemos nada
     if (!loginLink || !userInfo || !userName) return;
@@ -20,9 +45,18 @@ function actualizarUISesion(session) {
         userName.textContent = nombre;
         loginLink.style.display = "none";
         userInfo.style.display = "flex";
+
+        // Verificamos el rol de forma asíncrona y recién ahí mostramos el botón
+        if (backofficeLink) {
+            backofficeLink.style.display = "none";
+            esUsuarioAdmin(session).then((esAdmin) => {
+                backofficeLink.style.display = esAdmin ? "inline-flex" : "none";
+            });
+        }
     } else {
         loginLink.style.display = "inline-flex";
         userInfo.style.display = "none";
+        if (backofficeLink) backofficeLink.style.display = "none";
     }
 }
 
