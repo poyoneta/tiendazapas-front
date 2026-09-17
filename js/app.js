@@ -71,7 +71,6 @@ function createProductCard(product) {
                     <h3 class="product-name">${product.nombre}</h3>
                     <p>${product.descripcion ?? 'Sin descripción'}</p>
                     <p>Marca: ${product.marca?.nombre ?? 'Sin marca'}</p>
-                    <p>ID: ${product.id}</p>
                 </div>
             </div>
         </a>
