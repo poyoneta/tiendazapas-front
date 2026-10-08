@@ -192,12 +192,20 @@
       <!-- INVENTARIO -->
       <section class="seccion" id="seccion-inventario">
         <h2>Inventario</h2>
-        <p class="desc">Variantes con stock por debajo de 5 unidades.</p>
+        <p class="desc">Controlá el stock de cada variante: arriba las que tienen menos de 5 unidades, abajo todo el inventario.</p>
+        <button class="btn secundario" id="btn-refrescar-stock" type="button" style="margin-bottom:18px;">Actualizar listas</button>
         <div class="card">
-          <button class="btn secundario" id="btn-refrescar-stock" type="button">Actualizar lista</button>
-          <table style="margin-top:14px;">
+          <h3>Stock bajo (menos de 5)</h3>
+          <table>
             <thead><tr><th>Id</th><th>Zapatilla</th><th>Color</th><th>Talla</th><th>Stock</th><th>Nuevo stock</th></tr></thead>
             <tbody id="tabla-stock-bajo"></tbody>
+          </table>
+        </div>
+        <div class="card">
+          <h3>Todo el inventario</h3>
+          <table>
+            <thead><tr><th>Id</th><th>Zapatilla</th><th>Color</th><th>Talla</th><th>Stock</th><th>Nuevo stock</th></tr></thead>
+            <tbody id="tabla-stock-todo"></tbody>
           </table>
         </div>
       </section>

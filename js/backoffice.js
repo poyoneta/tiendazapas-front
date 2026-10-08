@@ -393,51 +393,80 @@ function wireFormImagen() {
 
 // ===== INVENTARIO =====
 function wireInventario() {
-    document.getElementById("btn-refrescar-stock").addEventListener("click", cargarStockBajo);
-    cargarStockBajo();
+    document.getElementById("btn-refrescar-stock").addEventListener("click", cargarInventario);
+    cargarInventario();
 }
 
-// "Marca - Nombre" de la zapatilla a la que pertenece una variante
-function nombreZapatilla(v) {
+// Texto plano "Marca - Nombre" de la zapatilla de una variante (sirve para ordenar)
+function textoZapatilla(v) {
     const z = v.zapatillaColor?.zapatilla;
-    if (!z) return "-";
-    const marca = z.marca?.nombre ? esc(z.marca.nombre) + " - " : "";
-    return marca + esc(z.nombre);
+    if (!z) return "";
+    return (z.marca?.nombre ? z.marca.nombre + " - " : "") + z.nombre;
 }
 
-async function cargarStockBajo() {
-    try {
-        const variantes = await api("/api/Inventario/stock-bajo");
-        document.getElementById("tabla-stock-bajo").innerHTML = variantes.map(v => `
-            <tr data-id="${v.id}">
-                <td>${v.id}</td>
-                <td>${nombreZapatilla(v)}</td>
-                <td>${esc(v.zapatillaColor?.color?.nombre ?? "-")}</td>
-                <td>${v.talla}</td>
-                <td class="stock-bajo">${v.stock}</td>
-                <td>
-                    <input type="number" style="width:70px;display:inline-block;" value="${v.stock}" class="input-nuevo-stock">
-                    <button class="btn chico secundario" type="button">Guardar</button>
-                </td>
-            </tr>
-        `).join("") || `<tr><td colspan="6">No hay variantes con stock bajo. 🎉</td></tr>`;
+// Lo mismo, escapado para meterlo en el HTML
+function nombreZapatilla(v) {
+    return esc(textoZapatilla(v)) || "-";
+}
 
-        document.querySelectorAll("#tabla-stock-bajo button").forEach(btn => {
-            btn.addEventListener("click", async () => {
-                const fila = btn.closest("tr");
-                const id = fila.dataset.id;
-                const nuevoStock = fila.querySelector(".input-nuevo-stock").value;
-                try {
-                    await api(`/api/Inventario/stock/${id}?nuevoStock=${nuevoStock}`, { method: "PUT" });
-                    cargarStockBajo();
-                } catch (err) {
-                    alert("Error actualizando stock: " + err.message);
-                }
-            });
-        });
+// Orden: por zapatilla, después color, después talle
+function ordenarVariantes(lista) {
+    return [...lista].sort((a, b) =>
+        textoZapatilla(a).localeCompare(textoZapatilla(b), "es") ||
+        (a.zapatillaColor?.color?.nombre ?? "").localeCompare(b.zapatillaColor?.color?.nombre ?? "", "es") ||
+        a.talla - b.talla
+    );
+}
+
+// Carga las dos tablas por separado: si una falla, la otra sigue funcionando
+async function cargarInventario() {
+    await Promise.all([
+        cargarTablaInventario("/api/Inventario/stock-bajo", "tabla-stock-bajo", "No hay variantes con stock bajo. 🎉"),
+        cargarTablaInventario("/api/Inventario/todas", "tabla-stock-todo", "Todavía no hay variantes cargadas."),
+    ]);
+}
+
+async function cargarTablaInventario(ruta, tbodyId, mensajeVacio) {
+    try {
+        const variantes = await api(ruta);
+        renderTablaInventario(tbodyId, variantes, mensajeVacio);
     } catch (e) {
-        console.error("Error cargando stock bajo:", e);
+        console.error("Error cargando " + ruta + ":", e);
+        document.getElementById(tbodyId).innerHTML =
+            `<tr><td colspan="6">No se pudo cargar esta lista.</td></tr>`;
     }
+}
+
+function renderTablaInventario(tbodyId, variantes, mensajeVacio) {
+    const tbody = document.getElementById(tbodyId);
+
+    tbody.innerHTML = ordenarVariantes(variantes).map(v => `
+        <tr data-id="${v.id}">
+            <td>${v.id}</td>
+            <td>${nombreZapatilla(v)}</td>
+            <td>${esc(v.zapatillaColor?.color?.nombre ?? "-")}</td>
+            <td>${v.talla}</td>
+            <td class="${v.stock < 5 ? "stock-bajo" : ""}">${v.stock}</td>
+            <td>
+                <input type="number" style="width:70px;display:inline-block;" value="${v.stock}" class="input-nuevo-stock">
+                <button class="btn chico secundario" type="button">Guardar</button>
+            </td>
+        </tr>
+    `).join("") || `<tr><td colspan="6">${mensajeVacio}</td></tr>`;
+
+    tbody.querySelectorAll("button").forEach(btn => {
+        btn.addEventListener("click", async () => {
+            const fila = btn.closest("tr");
+            const id = fila.dataset.id;
+            const nuevoStock = fila.querySelector(".input-nuevo-stock").value;
+            try {
+                await api(`/api/Inventario/stock/${id}?nuevoStock=${nuevoStock}`, { method: "PUT" });
+                cargarInventario(); // refresca las dos tablas
+            } catch (err) {
+                alert("Error actualizando stock: " + err.message);
+            }
+        });
+    });
 }
 
 // ===== ELIMINAR =====
