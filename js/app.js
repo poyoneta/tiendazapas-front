@@ -372,3 +372,41 @@ function showToast(message) {
         setTimeout(() => toast.remove(), 300);
     }, 2500);
 }
+
+// ===== HERO: zapatilla al azar de fondo + botón "Descubrir más" =====
+let heroInicializado = false;
+
+function actualizarHero() {
+    if (heroInicializado) return;
+
+    const bg = document.getElementById('hero-bg');
+    const boton = document.getElementById('hero-descubrir');
+    const etiqueta = document.getElementById('hero-destacada');
+    if (!bg || !boton) return;
+
+    // Solo zapatillas que tengan una foto real cargada
+    const conFoto = (products || []).filter(p => obtenerImagenPrincipal(p) !== "img/placeholder.jpg");
+    if (conFoto.length === 0) return;
+
+    heroInicializado = true;
+
+    const elegida = conFoto[Math.floor(Math.random() * conFoto.length)];
+    const url = obtenerImagenPrincipal(elegida);
+
+    // Precargamos la imagen para que aparezca con fade y no "salte"
+    const img = new Image();
+    img.onload = () => {
+        bg.style.backgroundImage = `url("${url}")`;
+        requestAnimationFrame(() => bg.classList.add('visible'));
+    };
+    img.src = url;
+
+    boton.href = `producto.html?id=${elegida.id}`;
+    boton.style.display = 'inline-flex';
+
+    if (etiqueta) {
+        const marca = elegida.marca?.nombre ? ` · ${elegida.marca.nombre}` : '';
+        etiqueta.innerHTML = `Zapatilla destacada: <strong>${elegida.nombre}</strong>${marca}`;
+        etiqueta.style.display = 'block';
+    }
+}

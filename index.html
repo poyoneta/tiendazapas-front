@@ -54,17 +54,24 @@
     </header>
 
     <!-- Hero Section -->
+    <div class="hero-wrapper">
+    <div class="hero-bg" id="hero-bg" aria-hidden="true"></div>
     <section class="hero">
         <div class="hero-content">
             <span class="hero-tag">Nueva Colección 2026</span>
             <h1 class="hero-title">Eleva Tu Estilo</h1>
             <p class="hero-subtitle">Descubre las zapatillas más exclusivas del mercado. Diseño, confort y rendimiento en cada paso.</p>
-            <a href="#productos" class="btn btn-primary">Explorar Colección</a>
+            <div class="hero-buttons">
+                <a href="#productos" class="btn btn-primary">Explorar Colección</a>
+                <a href="#" id="hero-descubrir" class="btn btn-outline hero-descubrir" style="display:none;">Descubrir más</a>
+            </div>
+            <p class="hero-destacada" id="hero-destacada" style="display:none;"></p>
         </div>
         <div class="hero-image">
             <div class="hero-shape"></div>
         </div>
     </section>
+    </div>
 
     <!-- Productos -->
     <section class="products-section" id="productos">

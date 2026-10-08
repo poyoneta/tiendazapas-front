@@ -1506,3 +1506,63 @@ input, select {
         flex-shrink: 0;
     }
 }
+
+/* ===== HERO: zapatilla al azar de fondo ===== */
+.hero-wrapper {
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-wrapper .hero {
+    z-index: 2;
+}
+
+.hero-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    filter: blur(10px) saturate(1.1);
+    transform: scale(1.12);
+    opacity: 0;
+    transition: opacity 1.2s ease;
+}
+
+.hero-bg.visible {
+    opacity: 0.5;
+}
+
+/* Degradado oscuro para que el texto siempre se lea bien */
+.hero-wrapper::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background:
+        linear-gradient(90deg, rgba(10, 10, 15, 0.92) 0%, rgba(10, 10, 15, 0.55) 55%, rgba(10, 10, 15, 0.25) 100%),
+        linear-gradient(0deg, var(--color-bg, #0a0a0f) 0%, transparent 25%);
+}
+
+.hero-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.hero-destacada {
+    margin-top: 1.25rem;
+    font-size: 0.9rem;
+    color: var(--color-muted);
+}
+
+.hero-destacada strong {
+    color: var(--color-text, #fff);
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    .hero-buttons { justify-content: center; }
+}

@@ -13,6 +13,7 @@ async function cargarProductos() {
 
         products = await response.json();
         renderProducts();
+        if (typeof actualizarHero === 'function') actualizarHero();
 
     } catch (error) {
         console.error(error);
