@@ -185,7 +185,15 @@ main.contenido { flex: 1; padding: 32px 36px; max-width: 920px; }
   box-shadow: 0 0 0 4px rgba(255, 77, 46, 0.15);
 }
 
-.campo select { appearance: none; cursor: pointer; }
+.campo select { appearance: none; cursor: pointer; color-scheme: dark; }
+
+/* Desplegable de opciones: fondo oscuro y texto claro (si no, el navegador las muestra blancas sobre blanco) */
+select option {
+  background-color: var(--panel-solido);
+  color: var(--texto);
+}
+select option[value=""] { color: var(--texto-muted); }
+select option:checked { background-color: #2b2836; }
 .campo textarea { resize: vertical; min-height: 64px; }
 
 .fila-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
