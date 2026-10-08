@@ -144,12 +144,21 @@ async function seleccionarColorway(colorway) {
     actualizarPrecioYStock();
 }
 
+// Ordena las fotos de un color: primero la principal, después el resto por "orden"
+function ordenarImagenes(imagenes) {
+    return [...(imagenes || [])].sort((a, b) =>
+        (b.es_Principal ? 1 : 0) - (a.es_Principal ? 1 : 0) ||
+        (a.orden ?? 0) - (b.orden ?? 0) ||
+        (a.id ?? 0) - (b.id ?? 0)
+    );
+}
+
 function renderImagenPrincipal() {
-    const imagenes = currentColorway.imagenes || [];
+    const imagenes = ordenarImagenes(currentColorway.imagenes);
 
     // Foto que se muestra grande al entrar (o al cambiar de color): la
     // marcada como principal, o si no hay ninguna, la primera de la lista.
-    const principal = imagenes.find(img => img.es_Principal) || imagenes[0];
+    const principal = imagenes[0];
     mostrarImagenGrande(principal?.url);
 
     renderGaleriaDeImagenes(imagenes, principal);

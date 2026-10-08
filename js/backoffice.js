@@ -346,7 +346,7 @@ function agregarBloqueColor() {
             <div class="talles"></div>
         </div>
         <div class="campo">
-            <label>Fotos (la primera es la principal)</label>
+            <label>Fotos (subí las que quieras · tocá la ★ para elegir la principal)</label>
             <input type="file" class="bc-fotos" accept="image/*" multiple>
             <div class="previews"></div>
         </div>
@@ -380,11 +380,41 @@ function agregarBloqueColor() {
         });
     });
     bloque.querySelector(".quitar-color").addEventListener("click", () => { bloque.remove(); renumerarBloques(); });
-    bloque.querySelector(".bc-fotos").addEventListener("change", (e) => {
-        const prev = bloque.querySelector(".previews");
-        prev.innerHTML = [...e.target.files].map((f, i) =>
-            `<div class="preview"><img src="${URL.createObjectURL(f)}" alt=""><span>${i === 0 ? "Principal" : i + 1}</span></div>`
-        ).join("");
+    // Fotos del color: se pueden sumar de a varias, quitar y elegir cuál es la principal
+    bloque._fotos = [];
+    bloque._principal = 0;
+    const inputFotos = bloque.querySelector(".bc-fotos");
+    const previews = bloque.querySelector(".previews");
+
+    function dibujarFotos() {
+        previews.innerHTML = "";
+        bloque._fotos.forEach((f, i) => {
+            const div = document.createElement("div");
+            div.className = "preview" + (i === bloque._principal ? " principal" : "");
+            div.innerHTML = `
+                <img src="${URL.createObjectURL(f)}" alt="">
+                <button type="button" class="estrella" title="Usar como foto principal">★</button>
+                <button type="button" class="quitar-foto" title="Quitar esta foto">✕</button>
+                ${i === bloque._principal ? "<span>Principal</span>" : ""}
+            `;
+            div.querySelector(".estrella").addEventListener("click", () => { bloque._principal = i; dibujarFotos(); });
+            div.querySelector(".quitar-foto").addEventListener("click", () => {
+                bloque._fotos.splice(i, 1);
+                if (bloque._principal === i) bloque._principal = 0;
+                else if (bloque._principal > i) bloque._principal--;
+                dibujarFotos();
+            });
+            previews.appendChild(div);
+        });
+    }
+
+    inputFotos.addEventListener("change", () => {
+        [...inputFotos.files].forEach(f => {
+            const repetida = bloque._fotos.some(x => x.name === f.name && x.size === f.size && x.lastModified === f.lastModified);
+            if (!repetida) bloque._fotos.push(f);
+        });
+        inputFotos.value = ""; // así se puede volver a elegir más fotos después
+        dibujarFotos();
     });
 
     cont.appendChild(bloque);
@@ -414,7 +444,11 @@ function leerColorways() {
         });
         if (variantes.length === 0) throw new Error(`Color ${n}: elegí al menos un talle.`);
 
-        return { colorId, variantes, fotos: [...b.querySelector(".bc-fotos").files] };
+        // La foto principal va primera (Orden 1, Es_Principal), el resto sigue en el orden en que se cargaron
+        const fotos = [...b._fotos];
+        if (fotos.length) fotos.unshift(...fotos.splice(b._principal, 1));
+
+        return { colorId, variantes, fotos };
     });
 }
 
@@ -511,26 +545,29 @@ function wireFormImagen() {
         e.preventDefault();
         const zapatillaId = document.getElementById("imagen-zapatilla").value;
         const zapatillaColorId = document.getElementById("imagen-colorway").value;
-        const archivo = document.getElementById("imagen-archivo").files[0];
-        const orden = document.getElementById("imagen-orden").value || 1;
+        const archivos = [...document.getElementById("imagen-archivo").files];
+        const orden = Number(document.getElementById("imagen-orden").value) || 1;
         const esPrincipal = document.getElementById("imagen-principal").checked;
 
         if (!zapatillaColorId) { mostrarMensaje("msg-imagen", "Elegí un colorway.", "error"); return; }
-        if (!archivo) { mostrarMensaje("msg-imagen", "Elegí un archivo de imagen.", "error"); return; }
+        if (archivos.length === 0) { mostrarMensaje("msg-imagen", "Elegí al menos una imagen.", "error"); return; }
 
-        const formData = new FormData();
-        formData.append("Archivo", archivo);
-        formData.append("Orden", orden);
-        formData.append("Es_Principal", esPrincipal);
-        formData.append("ZapatillaColorId", zapatillaColorId);
-
+        let subidas = 0;
         try {
-            await api("/api/Admin/subir-imagen", { method: "POST", body: formData });
-            mostrarMensaje("msg-imagen", "Imagen subida correctamente.", "exito");
+            for (let i = 0; i < archivos.length; i++) {
+                const formData = new FormData();
+                formData.append("Archivo", archivos[i]);
+                formData.append("Orden", orden + i);
+                formData.append("Es_Principal", esPrincipal && i === 0); // la principal es la primera de la selección
+                formData.append("ZapatillaColorId", zapatillaColorId);
+                await api("/api/Admin/subir-imagen", { method: "POST", body: formData });
+                subidas++;
+            }
+            mostrarMensaje("msg-imagen", `${subidas} imagen(es) subida(s) correctamente.`, "exito");
             e.target.reset();
             delete detalleCache[zapatillaId];
         } catch (err) {
-            mostrarMensaje("msg-imagen", "Error: " + err.message, "error");
+            mostrarMensaje("msg-imagen", `Error (se subieron ${subidas} de ${archivos.length}): ` + err.message, "error");
         }
     });
 }

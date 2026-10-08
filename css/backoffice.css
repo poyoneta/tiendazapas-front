@@ -484,3 +484,32 @@ tr:hover td { background: rgba(255, 255, 255, 0.03); }
 @media (max-width: 860px) {
   .cabecera-talles, .fila-talle { grid-template-columns: 1fr 1fr 1fr; }
 }
+
+/* Elegir foto principal / quitar foto (creación de zapatilla) */
+.preview { width: 84px; height: 84px; }
+.preview.principal img { border: 2px solid var(--naranja); }
+
+.preview .estrella,
+.preview .quitar-foto {
+  position: absolute;
+  top: 4px;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: rgba(10, 10, 15, 0.8);
+  color: var(--texto);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.preview .estrella { left: 4px; color: var(--texto-muted); }
+.preview.principal .estrella { color: var(--naranja); }
+.preview .estrella:hover { color: var(--naranja); }
+.preview .quitar-foto { right: 4px; }
+.preview .quitar-foto:hover { background: var(--error); color: #1a0505; }
