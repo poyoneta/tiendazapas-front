@@ -83,8 +83,6 @@ function inicializarPanel() {
     });
 
     // Listeners "en cascada" entre selects: se atan UNA sola vez acá
-    document.getElementById("colorway-zapatilla").addEventListener("change", (e) => actualizarTablaColorways(e.target.value));
-    document.getElementById("variante-zapatilla").addEventListener("change", (e) => cargarColorwaysEnSelect(e.target.value, "variante-colorway"));
     document.getElementById("imagen-zapatilla").addEventListener("change", (e) => cargarColorwaysEnSelect(e.target.value, "imagen-colorway"));
     document.getElementById("eliminar-var-zapatilla").addEventListener("change", (e) => cargarColorwaysEnSelect(e.target.value, "eliminar-var-colorway"));
     document.getElementById("eliminar-var-colorway").addEventListener("change", (e) => cargarVariantesEnSelect(e.target.value, "eliminar-variante"));
@@ -95,8 +93,6 @@ function inicializarPanel() {
     wireFormMarca();
     wireFormColor();
     wireFormZapatilla();
-    wireFormColorway();
-    wireFormVariante();
     wireFormImagen();
     wireInventario();
     wireEliminar();
@@ -152,14 +148,8 @@ async function cargarMarcas() {
 }
 
 async function cargarColores() {
-    const select = document.getElementById("colorway-color");
     try {
         COLORES = await api("/api/Catalogo/colores");
-
-        llenarSelect(select, COLORES.map(c => ({
-            value: c.id,
-            label: `#${c.id} - ${esc(c.nombre)}${c.hex ? " (" + esc(c.hex) + ")" : ""}`
-        })), "Elegí un color");
 
         const filas = COLORES.map(c => `
             <tr>
@@ -169,11 +159,10 @@ async function cargarColores() {
             </tr>
         `).join("") || `<tr><td colspan="3">Todavía no hay colores creados.</td></tr>`;
 
+        refrescarColoresEnBuilder();
         document.getElementById("tabla-colores").innerHTML = filas;
-        document.getElementById("tabla-colores-colorway").innerHTML = filas;
     } catch (e) {
         console.error("Error cargando colores:", e);
-        llenarSelect(select, [], "No se pudo cargar la lista de colores");
     }
 }
 
@@ -183,7 +172,7 @@ async function cargarZapatillas() {
 
         const opciones = ZAPATILLAS.map(z => ({ value: z.id, label: `${z.marca?.nombre ?? "?"} - ${z.nombre}` }));
 
-        ["colorway-zapatilla", "variante-zapatilla", "imagen-zapatilla", "eliminar-zapatilla", "eliminar-var-zapatilla"]
+        ["imagen-zapatilla", "eliminar-zapatilla", "eliminar-var-zapatilla"]
             .forEach(id => llenarSelect(document.getElementById(id), opciones, "Elegí una zapatilla"));
 
         document.getElementById("tabla-zapatillas").innerHTML = ZAPATILLAS.map(z => `
@@ -212,23 +201,6 @@ async function cargarColorwaysEnSelect(zapatillaId, selectId) {
             label: `#${zc.id} - ${zc.color?.nombre ?? "color " + zc.colorId}`
         }));
         llenarSelect(select, opciones, "Elegí un colorway");
-    } catch (e) {
-        console.error("Error cargando colorways:", e);
-    }
-}
-
-async function actualizarTablaColorways(zapatillaId) {
-    const tbody = document.getElementById("tabla-colorways");
-    if (!zapatillaId) { tbody.innerHTML = ""; return; }
-    try {
-        const detalle = await obtenerDetalle(zapatillaId);
-        tbody.innerHTML = (detalle?.zapatillaColores ?? []).map(zc => `
-            <tr>
-                <td>#${zc.id}</td>
-                <td><span class="swatch" style="background:${colorCss(zc.color?.hex)}"></span>${esc(zc.color?.nombre ?? "-")}</td>
-                <td>${(zc.imagenes ?? []).length} foto(s)</td>
-            </tr>
-        `).join("") || `<tr><td colspan="3">Esta zapatilla todavía no tiene colorways.</td></tr>`;
     } catch (e) {
         console.error("Error cargando colorways:", e);
     }
@@ -281,7 +253,7 @@ function wireFormColor() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ nombre, hex }),
             });
-            mostrarMensaje("msg-color", `Color creado con Id ${creado?.id ?? "?"}. Ya aparece en la lista de Colorways.`, "exito");
+            mostrarMensaje("msg-color", `Color creado con Id ${creado?.id ?? "?"}. Ya podés elegirlo al crear una zapatilla.`, "exito");
             e.target.reset();
             cargarColores();
         } catch (err) {
@@ -290,73 +262,245 @@ function wireFormColor() {
     });
 }
 
-// ===== FORM: ZAPATILLA =====
+// ===== FORM: ZAPATILLA COMPLETA (datos + colores + talles + fotos) =====
+function opcionesColorHtml(seleccionado) {
+    return `<option value="">Elegí un color</option>` + COLORES.map(c =>
+        `<option value="${c.id}"${String(c.id) === String(seleccionado) ? " selected" : ""}>#${c.id} - ${esc(c.nombre)}${c.hex ? " (" + esc(c.hex) + ")" : ""}</option>`
+    ).join("");
+}
+
+// Cuando se carga/recarga la lista de colores, actualiza los desplegables ya dibujados
+function refrescarColoresEnBuilder() {
+    document.querySelectorAll("#colorways-builder .bc-color").forEach(sel => {
+        const actual = sel.value;
+        sel.innerHTML = opcionesColorHtml(actual);
+    });
+}
+
+function renumerarBloques() {
+    const bloques = document.querySelectorAll("#colorways-builder .bloque-color");
+    bloques.forEach((b, i) => {
+        b.querySelector(".bc-num").textContent = i + 1;
+        b.querySelector(".quitar-color").style.display = bloques.length > 1 ? "inline-block" : "none";
+    });
+}
+
+const TALLES_DISPONIBLES = [35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45];
+
+// Agrega (o quita) la fila de precio/stock de un talle elegido, manteniendo el orden por talle
+function alternarTalle(bloque, talla, activo) {
+    const cont = bloque.querySelector(".talles");
+    const existente = cont.querySelector(`.fila-talle[data-talla="${talla}"]`);
+
+    if (!activo) { if (existente) existente.remove(); }
+    else if (!existente) {
+        const fila = document.createElement("div");
+        fila.className = "fila-talle";
+        fila.dataset.talla = talla;
+        fila.innerHTML = `
+            <span class="t-etiqueta">Talle ${talla}</span>
+            <input type="number" class="t-precio" placeholder="Precio" step="0.01" min="0" value="${bloque.querySelector(".m-precio").value}">
+            <input type="number" class="t-stock" placeholder="Stock" min="0" value="${bloque.querySelector(".m-stock").value}">
+        `;
+        // Insertar en orden
+        const siguiente = [...cont.querySelectorAll(".fila-talle")].find(f => Number(f.dataset.talla) > talla);
+        cont.insertBefore(fila, siguiente || null);
+    }
+
+    bloque.querySelector(".cabecera-talles").style.display = cont.children.length ? "grid" : "none";
+    bloque.querySelector(".masivo").style.display = cont.children.length ? "flex" : "none";
+    const n = cont.children.length;
+    bloque.querySelector(".resumen-talles").textContent = n ? `${n} talle(s) seleccionado(s)` : "Todavía no elegiste ningún talle";
+}
+
+function agregarBloqueColor() {
+    const cont = document.getElementById("colorways-builder");
+    const bloque = document.createElement("div");
+    bloque.className = "bloque-color";
+    bloque.innerHTML = `
+        <div class="bloque-head">
+            <strong>Color <span class="bc-num"></span></strong>
+            <button type="button" class="btn chico secundario quitar-color">Quitar este color</button>
+        </div>
+        <div class="campo">
+            <label>Color</label>
+            <select class="bc-color">${opcionesColorHtml("")}</select>
+        </div>
+        <div class="campo">
+            <label>Talles (tocá los que quieras, podés elegir varios)</label>
+            <div class="chips-talles">
+                ${TALLES_DISPONIBLES.map(t => `<button type="button" class="chip-talle" data-talla="${t}">${t}</button>`).join("")}
+            </div>
+            <div class="acciones-chips">
+                <button type="button" class="btn chico secundario sel-todos">Seleccionar todos</button>
+                <button type="button" class="btn chico secundario sel-ninguno">Limpiar</button>
+                <span class="resumen-talles">Todavía no elegiste ningún talle</span>
+            </div>
+            <div class="masivo" style="display:none;">
+                <span>Para todos los elegidos:</span>
+                <input type="number" class="m-precio" placeholder="Precio" step="0.01" min="0">
+                <input type="number" class="m-stock" placeholder="Stock" min="0">
+                <button type="button" class="btn chico secundario aplicar-masivo">Aplicar a todos</button>
+            </div>
+            <div class="cabecera-talles" style="display:none;"><span>Talle</span><span>Precio</span><span>Stock</span></div>
+            <div class="talles"></div>
+        </div>
+        <div class="campo">
+            <label>Fotos (la primera es la principal)</label>
+            <input type="file" class="bc-fotos" accept="image/*" multiple>
+            <div class="previews"></div>
+        </div>
+    `;
+
+    bloque.querySelectorAll(".chip-talle").forEach(chip => {
+        chip.addEventListener("click", () => {
+            const activo = !chip.classList.contains("activo");
+            chip.classList.toggle("activo", activo);
+            alternarTalle(bloque, Number(chip.dataset.talla), activo);
+        });
+    });
+    bloque.querySelector(".sel-todos").addEventListener("click", () => {
+        bloque.querySelectorAll(".chip-talle").forEach(chip => {
+            chip.classList.add("activo");
+            alternarTalle(bloque, Number(chip.dataset.talla), true);
+        });
+    });
+    bloque.querySelector(".sel-ninguno").addEventListener("click", () => {
+        bloque.querySelectorAll(".chip-talle").forEach(chip => {
+            chip.classList.remove("activo");
+            alternarTalle(bloque, Number(chip.dataset.talla), false);
+        });
+    });
+    bloque.querySelector(".aplicar-masivo").addEventListener("click", () => {
+        const precio = bloque.querySelector(".m-precio").value;
+        const stock = bloque.querySelector(".m-stock").value;
+        bloque.querySelectorAll(".fila-talle").forEach(f => {
+            if (precio !== "") f.querySelector(".t-precio").value = precio;
+            if (stock !== "") f.querySelector(".t-stock").value = stock;
+        });
+    });
+    bloque.querySelector(".quitar-color").addEventListener("click", () => { bloque.remove(); renumerarBloques(); });
+    bloque.querySelector(".bc-fotos").addEventListener("change", (e) => {
+        const prev = bloque.querySelector(".previews");
+        prev.innerHTML = [...e.target.files].map((f, i) =>
+            `<div class="preview"><img src="${URL.createObjectURL(f)}" alt=""><span>${i === 0 ? "Principal" : i + 1}</span></div>`
+        ).join("");
+    });
+
+    cont.appendChild(bloque);
+    renumerarBloques();
+}
+
+// Lee y valida lo que cargó el admin. Devuelve { colorways } o lanza Error con el motivo.
+function leerColorways() {
+    const bloques = [...document.querySelectorAll("#colorways-builder .bloque-color")];
+    if (bloques.length === 0) throw new Error("Agregá al menos un color.");
+
+    const usados = new Set();
+    return bloques.map((b, i) => {
+        const n = i + 1;
+        const colorId = Number(b.querySelector(".bc-color").value);
+        if (!colorId) throw new Error(`Color ${n}: elegí un color.`);
+        if (usados.has(colorId)) throw new Error(`Color ${n}: ese color ya está en otro bloque.`);
+        usados.add(colorId);
+
+        const variantes = [...b.querySelectorAll(".fila-talle")].map(f => {
+            const talla = Number(f.dataset.talla);
+            const precio = f.querySelector(".t-precio").value;
+            const stock = f.querySelector(".t-stock").value;
+            if (precio === "" || stock === "") throw new Error(`Color ${n}: completá precio y stock del talle ${talla}.`);
+            if (Number(precio) < 0 || Number(stock) < 0) throw new Error(`Color ${n}: el precio y el stock no pueden ser negativos.`);
+            return { talla, precio: Number(precio), stock: Number(stock) };
+        });
+        if (variantes.length === 0) throw new Error(`Color ${n}: elegí al menos un talle.`);
+
+        return { colorId, variantes, fotos: [...b.querySelector(".bc-fotos").files] };
+    });
+}
+
 function wireFormZapatilla() {
+    agregarBloqueColor();
+    document.getElementById("btn-agregar-color").addEventListener("click", agregarBloqueColor);
+
     document.getElementById("form-zapatilla").addEventListener("submit", async (e) => {
         e.preventDefault();
+
         const marcaId = Number(document.getElementById("zapatilla-marca").value);
         const nombre = document.getElementById("zapatilla-nombre").value.trim();
         const descripcion = document.getElementById("zapatilla-descripcion").value.trim();
         if (!marcaId) { mostrarMensaje("msg-zapatilla", "Elegí una marca.", "error"); return; }
+
+        let colorways;
+        try { colorways = leerColorways(); }
+        catch (err) { mostrarMensaje("msg-zapatilla", err.message, "error"); return; }
+
+        const boton = document.getElementById("btn-crear-zapatilla");
+        const lista = document.getElementById("progreso-zapatilla");
+        lista.innerHTML = "";
+        const paso = (texto) => {
+            const li = document.createElement("li");
+            li.textContent = texto;
+            lista.appendChild(li);
+        };
+        const jsonPost = (path, datos) => api(path, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(datos),
+        });
+
+        boton.disabled = true;
+        mostrarMensaje("msg-zapatilla", "Creando… no cierres esta página.", "exito");
+
+        let zapatillaId = null;
         try {
-            await api("/api/Admin/zapatillas", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ marcaId, nombre, descripcion }),
-            });
-            mostrarMensaje("msg-zapatilla", "Zapatilla creada correctamente.", "exito");
+            const zapatilla = await jsonPost("/api/Admin/zapatillas", { marcaId, nombre, descripcion });
+            zapatillaId = zapatilla.id;
+            paso(`✔ Zapatilla creada (#${zapatillaId})`);
+
+            for (const cw of colorways) {
+                const nombreColor = COLORES.find(c => c.id === cw.colorId)?.nombre ?? `color ${cw.colorId}`;
+
+                const colorway = await jsonPost("/api/Admin/colorways", { zapatillaId, colorId: cw.colorId });
+                paso(`✔ Color ${nombreColor} agregado`);
+
+                for (const v of cw.variantes) {
+                    await jsonPost("/api/Admin/variantes", { zapatillaColorId: colorway.id, ...v });
+                }
+                paso(`✔ ${cw.variantes.length} talle(s) cargados en ${nombreColor}`);
+
+                for (let i = 0; i < cw.fotos.length; i++) {
+                    const fd = new FormData();
+                    fd.append("Archivo", cw.fotos[i]);
+                    fd.append("Orden", i + 1);
+                    fd.append("Es_Principal", i === 0);
+                    fd.append("ZapatillaColorId", colorway.id);
+                    await api("/api/Admin/subir-imagen", { method: "POST", body: fd });
+                }
+                if (cw.fotos.length) paso(`✔ ${cw.fotos.length} foto(s) subidas en ${nombreColor}`);
+            }
+
+            mostrarMensaje("msg-zapatilla", `¡Listo! "${nombre}" se creó completa con ${colorways.length} color(es).`, "exito");
             e.target.reset();
+            document.getElementById("colorways-builder").innerHTML = "";
+            agregarBloqueColor();
+            detalleCache = {};
             cargarZapatillas();
+            cargarInventario();
         } catch (err) {
-            mostrarMensaje("msg-zapatilla", "Error: " + err.message, "error");
-        }
-    });
-}
-
-// ===== FORM: COLORWAY =====
-function wireFormColorway() {
-    document.getElementById("form-colorway").addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const zapatillaId = Number(document.getElementById("colorway-zapatilla").value);
-        const colorId = Number(document.getElementById("colorway-color").value);
-        if (!zapatillaId) { mostrarMensaje("msg-colorway", "Elegí una zapatilla.", "error"); return; }
-        if (!colorId) { mostrarMensaje("msg-colorway", "Elegí un color.", "error"); return; }
-        try {
-            await api("/api/Admin/colorways", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ zapatillaId, colorId }),
-            });
-            mostrarMensaje("msg-colorway", "Colorway creado correctamente.", "exito");
-            e.target.reset();
-            delete detalleCache[zapatillaId];
-            document.getElementById("colorway-zapatilla").value = zapatillaId;
-            actualizarTablaColorways(zapatillaId);
-        } catch (err) {
-            mostrarMensaje("msg-colorway", "Error: " + err.message, "error");
-        }
-    });
-}
-
-// ===== FORM: VARIANTE =====
-function wireFormVariante() {
-    document.getElementById("form-variante").addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const zapatillaColorId = Number(document.getElementById("variante-colorway").value);
-        const talla = Number(document.getElementById("variante-talla").value);
-        const precio = Number(document.getElementById("variante-precio").value);
-        const stock = Number(document.getElementById("variante-stock").value);
-        if (!zapatillaColorId) { mostrarMensaje("msg-variante", "Elegí un colorway.", "error"); return; }
-        try {
-            await api("/api/Admin/variantes", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ zapatillaColorId, talla, precio, stock }),
-            });
-            mostrarMensaje("msg-variante", "Variante creada correctamente.", "exito");
-            e.target.reset();
-        } catch (err) {
-            mostrarMensaje("msg-variante", "Error: " + err.message, "error");
+            // Si algo falló a mitad de camino, borramos lo que quedó a medias para no dejar una zapatilla rota
+            let extra = "";
+            if (zapatillaId) {
+                try {
+                    await api(`/api/Admin/zapatillas/${zapatillaId}`, { method: "DELETE" });
+                    extra = " Se deshizo lo que se había creado; podés corregir y volver a intentar.";
+                } catch {
+                    extra = ` Quedó una zapatilla incompleta (#${zapatillaId}); eliminala desde la pestaña Eliminar.`;
+                }
+            }
+            mostrarMensaje("msg-zapatilla", "Error: " + err.message + extra, "error");
+            cargarZapatillas();
+        } finally {
+            boton.disabled = false;
         }
     });
 }

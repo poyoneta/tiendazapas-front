@@ -1521,20 +1521,33 @@ input, select {
     position: absolute;
     inset: 0;
     z-index: 0;
+    background-color: #14121c; /* se reemplaza por un tono sacado de la foto */
+    transition: background-color 1.2s ease;
+}
+
+/* La foto ocupa solo el lado derecho y se funde con el color de fondo */
+.hero-bg-img {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 58%;
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    filter: blur(10px) saturate(1.1);
-    transform: scale(1.12);
+    filter: blur(6px);
+    transform: scale(1.06);
     opacity: 0;
     transition: opacity 1.2s ease;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 45%);
+            mask-image: linear-gradient(90deg, transparent 0%, #000 45%);
 }
 
-.hero-bg.visible {
-    opacity: 0.5;
+.hero-bg.visible .hero-bg-img {
+    opacity: 0.85;
 }
 
-/* Degradado oscuro para que el texto siempre se lea bien */
+/* Fundido hacia abajo y leve oscurecido para que el texto se lea bien */
 .hero-wrapper::after {
     content: "";
     position: absolute;
@@ -1542,8 +1555,12 @@ input, select {
     z-index: 1;
     pointer-events: none;
     background:
-        linear-gradient(90deg, rgba(10, 10, 15, 0.92) 0%, rgba(10, 10, 15, 0.55) 55%, rgba(10, 10, 15, 0.25) 100%),
-        linear-gradient(0deg, var(--color-bg, #0a0a0f) 0%, transparent 25%);
+        linear-gradient(90deg, rgba(10, 10, 15, 0.35) 0%, rgba(10, 10, 15, 0) 60%),
+        linear-gradient(0deg, var(--color-bg, #0a0a0f) 0%, transparent 22%);
+}
+
+@media (max-width: 768px) {
+    .hero-bg-img { width: 100%; -webkit-mask-image: none; mask-image: none; opacity: 0.4; }
 }
 
 .hero-buttons {

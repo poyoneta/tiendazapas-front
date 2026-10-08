@@ -395,9 +395,18 @@ function actualizarHero() {
 
     // Precargamos la imagen para que aparezca con fade y no "salte"
     const img = new Image();
+    img.crossOrigin = 'anonymous'; // permite leer los colores de la foto
     img.onload = () => {
-        bg.style.backgroundImage = `url("${url}")`;
+        const fondoImg = document.getElementById('hero-bg-img');
+        if (fondoImg) fondoImg.style.backgroundImage = `url("${url}")`;
+        bg.style.backgroundColor = tonoDeImagen(img);
         requestAnimationFrame(() => bg.classList.add('visible'));
+    };
+    img.onerror = () => {
+        // Si el servidor no permite leer los colores, mostramos la foto igual
+        const fondoImg = document.getElementById('hero-bg-img');
+        if (fondoImg) fondoImg.style.backgroundImage = `url("${url}")`;
+        bg.classList.add('visible');
     };
     img.src = url;
 
@@ -408,5 +417,22 @@ function actualizarHero() {
         const marca = elegida.marca?.nombre ? ` · ${elegida.marca.nombre}` : '';
         etiqueta.innerHTML = `Zapatilla destacada: <strong>${elegida.nombre}</strong>${marca}`;
         etiqueta.style.display = 'block';
+    }
+}
+
+// Color promedio de la foto, oscurecido, para pintar el resto del fondo
+function tonoDeImagen(img) {
+    try {
+        const c = document.createElement('canvas');
+        c.width = c.height = 16;
+        const ctx = c.getContext('2d');
+        ctx.drawImage(img, 0, 0, 16, 16);
+        const d = ctx.getImageData(0, 0, 16, 16).data;
+        let r = 0, g = 0, b = 0, n = 0;
+        for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; n++; }
+        const k = 0.45; // oscurece para mantener el estilo oscuro de la página
+        return `rgb(${Math.round(r / n * k)}, ${Math.round(g / n * k)}, ${Math.round(b / n * k)})`;
+    } catch (e) {
+        return '#14121c';
     }
 }

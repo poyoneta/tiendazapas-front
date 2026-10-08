@@ -30,8 +30,6 @@
       <button data-seccion="marcas" class="activo">Marcas</button>
       <button data-seccion="colores">Colores</button>
       <button data-seccion="zapatillas">Zapatillas</button>
-      <button data-seccion="colorways">Colorways</button>
-      <button data-seccion="variantes">Talles / Stock</button>
       <button data-seccion="imagenes">Imágenes</button>
       <button data-seccion="inventario">Inventario</button>
       <button data-seccion="eliminar">Eliminar</button>
@@ -63,7 +61,7 @@
       <!-- COLORES -->
       <section class="seccion" id="seccion-colores">
         <h2>Colores</h2>
-        <p class="desc">Colores disponibles para armar los colorways de cada zapatilla.</p>
+        <p class="desc">Colores disponibles para elegir al crear una zapatilla.</p>
         <div class="card">
           <h3>Nuevo color</h3>
           <form id="form-color">
@@ -84,80 +82,36 @@
       <!-- ZAPATILLAS -->
       <section class="seccion" id="seccion-zapatillas">
         <h2>Zapatillas</h2>
-        <p class="desc">Modelo base. Después le agregás colorways (color + fotos) y talles.</p>
+        <p class="desc">Creá una zapatilla completa en un solo paso: datos, colores, talles con precio y stock, y fotos. Para subir fotos a una zapatilla que ya existe usá la pestaña Imágenes.</p>
         <div class="card">
           <h3>Nueva zapatilla</h3>
           <form id="form-zapatilla">
-            <div class="campo">
-              <label>Marca</label>
-              <select id="zapatilla-marca" required></select>
+
+            <div class="paso"><span class="paso-num">1</span> Datos de la zapatilla</div>
+            <div class="fila-2">
+              <div class="campo">
+                <label>Marca</label>
+                <select id="zapatilla-marca" required></select>
+              </div>
+              <div class="campo"><label>Nombre</label><input type="text" id="zapatilla-nombre" required></div>
             </div>
-            <div class="campo"><label>Nombre</label><input type="text" id="zapatilla-nombre" required></div>
             <div class="campo"><label>Descripción</label><textarea id="zapatilla-descripcion"></textarea></div>
-            <button class="btn" type="submit">Crear zapatilla</button>
+
+            <div class="paso"><span class="paso-num">2</span> Colores, talles y fotos</div>
+            <p class="ayuda">Agregá un bloque por cada color en que viene la zapatilla. Dentro de cada uno cargás sus talles (con precio y stock) y sus fotos. ¿Falta un color en la lista? Crealo primero en la pestaña <strong>Colores</strong>.</p>
+            <div id="colorways-builder"></div>
+            <button class="btn secundario" type="button" id="btn-agregar-color">+ Agregar otro color</button>
+
+            <div class="acciones-final">
+              <button class="btn" type="submit" id="btn-crear-zapatilla">Crear zapatilla completa</button>
+            </div>
             <div class="mensaje" id="msg-zapatilla"></div>
+            <ul class="progreso" id="progreso-zapatilla"></ul>
           </form>
         </div>
         <div class="card">
           <h3>Catálogo actual</h3>
           <table><thead><tr><th>Id</th><th>Marca</th><th>Nombre</th></tr></thead><tbody id="tabla-zapatillas"></tbody></table>
-        </div>
-      </section>
-
-      <!-- COLORWAYS -->
-      <section class="seccion" id="seccion-colorways">
-        <h2>Colorways</h2>
-        <p class="desc">Asociá una zapatilla con un color (esto genera el "ZapatillaColorId" que después usás para talles e imágenes).</p>
-        <div class="card">
-          <h3>Nuevo colorway</h3>
-          <form id="form-colorway">
-            <div class="fila-2">
-              <div class="campo">
-                <label>Zapatilla</label>
-                <select id="colorway-zapatilla" required></select>
-              </div>
-              <div class="campo">
-                <label>Color</label>
-                <select id="colorway-color" required></select>
-              </div>
-            </div>
-            <button class="btn" type="submit">Crear colorway</button>
-            <div class="mensaje" id="msg-colorway"></div>
-          </form>
-        </div>
-        <div class="card">
-          <h3>Colores disponibles</h3>
-          <table><thead><tr><th>Id</th><th>Color</th><th>Hex</th></tr></thead><tbody id="tabla-colores-colorway"></tbody></table>
-        </div>
-        <div class="card">
-          <h3>Colorways de la zapatilla seleccionada</h3>
-          <table><thead><tr><th>ZapatillaColorId</th><th>Color</th><th>Imágenes</th></tr></thead><tbody id="tabla-colorways"></tbody></table>
-        </div>
-      </section>
-
-      <!-- VARIANTES -->
-      <section class="seccion" id="seccion-variantes">
-        <h2>Talles / Stock (Variantes)</h2>
-        <p class="desc">Cada variante es un talle con su precio y stock, atado a un colorway puntual.</p>
-        <div class="card">
-          <h3>Nueva variante</h3>
-          <form id="form-variante">
-            <div class="campo">
-              <label>Zapatilla</label>
-              <select id="variante-zapatilla" required></select>
-            </div>
-            <div class="campo">
-              <label>Colorway</label>
-              <select id="variante-colorway" required></select>
-            </div>
-            <div class="fila-3">
-              <div class="campo"><label>Talla</label><input type="number" id="variante-talla" required></div>
-              <div class="campo"><label>Precio</label><input type="number" step="0.01" id="variante-precio" required></div>
-              <div class="campo"><label>Stock</label><input type="number" id="variante-stock" required></div>
-            </div>
-            <button class="btn" type="submit">Crear variante</button>
-            <div class="mensaje" id="msg-variante"></div>
-          </form>
         </div>
       </section>
 
