@@ -397,13 +397,22 @@ function wireInventario() {
     cargarStockBajo();
 }
 
+// "Marca - Nombre" de la zapatilla a la que pertenece una variante
+function nombreZapatilla(v) {
+    const z = v.zapatillaColor?.zapatilla;
+    if (!z) return "-";
+    const marca = z.marca?.nombre ? esc(z.marca.nombre) + " - " : "";
+    return marca + esc(z.nombre);
+}
+
 async function cargarStockBajo() {
     try {
         const variantes = await api("/api/Inventario/stock-bajo");
         document.getElementById("tabla-stock-bajo").innerHTML = variantes.map(v => `
             <tr data-id="${v.id}">
                 <td>${v.id}</td>
-                <td>${v.zapatillaColor?.color?.nombre ?? "-"}</td>
+                <td>${nombreZapatilla(v)}</td>
+                <td>${esc(v.zapatillaColor?.color?.nombre ?? "-")}</td>
                 <td>${v.talla}</td>
                 <td class="stock-bajo">${v.stock}</td>
                 <td>
@@ -411,7 +420,7 @@ async function cargarStockBajo() {
                     <button class="btn chico secundario" type="button">Guardar</button>
                 </td>
             </tr>
-        `).join("") || `<tr><td colspan="5">No hay variantes con stock bajo. 🎉</td></tr>`;
+        `).join("") || `<tr><td colspan="6">No hay variantes con stock bajo. 🎉</td></tr>`;
 
         document.querySelectorAll("#tabla-stock-bajo button").forEach(btn => {
             btn.addEventListener("click", async () => {
