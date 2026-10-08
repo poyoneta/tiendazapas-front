@@ -176,7 +176,10 @@ async function cargarZapatillas() {
             .forEach(id => llenarSelect(document.getElementById(id), opciones, "Elegí una zapatilla"));
 
         document.getElementById("tabla-zapatillas").innerHTML = ZAPATILLAS.map(z => `
-            <tr><td>${z.id}</td><td>${z.marca?.nombre ?? "-"}</td><td>${z.nombre}</td></tr>
+            <tr>
+                <td>${z.id}</td><td>${esc(z.marca?.nombre ?? "-")}</td><td>${esc(z.nombre)}</td>
+                <td><button type="button" class="btn chico secundario btn-editar" data-id="${z.id}">Editar</button></td>
+            </tr>
         `).join("");
     } catch (e) {
         console.error("Error cargando zapatillas:", e);
@@ -287,8 +290,12 @@ function renumerarBloques() {
 
 const TALLES_DISPONIBLES = [35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45];
 
-// Agrega (o quita) la fila de precio/stock de un talle elegido, manteniendo el orden por talle
-function alternarTalle(bloque, talla, activo) {
+// null = estamos creando una zapatilla nueva; si no, datos de la que se está editando
+let EDITANDO = null;
+
+// Agrega (o quita) el talle elegido: el cuadradito y su fila de precio/stock van juntos.
+// "valores" (opcional) trae los datos de un talle que ya existe en la base.
+function alternarTalle(bloque, talla, activo, valores) {
     const cont = bloque.querySelector(".talles");
     const existente = cont.querySelector(`.fila-talle[data-talla="${talla}"]`);
 
@@ -297,39 +304,55 @@ function alternarTalle(bloque, talla, activo) {
         const fila = document.createElement("div");
         fila.className = "fila-talle";
         fila.dataset.talla = talla;
+        if (valores?.id) fila.dataset.varianteId = valores.id;
+        const precio = valores ? valores.precio : bloque.querySelector(".m-precio").value;
+        const stock = valores ? valores.stock : bloque.querySelector(".m-stock").value;
         fila.innerHTML = `
             <span class="t-etiqueta">Talle ${talla}</span>
-            <input type="number" class="t-precio" placeholder="Precio" step="0.01" min="0" value="${bloque.querySelector(".m-precio").value}">
-            <input type="number" class="t-stock" placeholder="Stock" min="0" value="${bloque.querySelector(".m-stock").value}">
+            <input type="number" class="t-precio" placeholder="Precio" step="0.01" min="0" value="${precio ?? ""}">
+            <input type="number" class="t-stock" placeholder="Stock" min="0" value="${stock ?? ""}">
         `;
         // Insertar en orden
         const siguiente = [...cont.querySelectorAll(".fila-talle")].find(f => Number(f.dataset.talla) > talla);
         cont.insertBefore(fila, siguiente || null);
     }
 
-    bloque.querySelector(".cabecera-talles").style.display = cont.children.length ? "grid" : "none";
-    bloque.querySelector(".masivo").style.display = cont.children.length ? "flex" : "none";
+    const chip = bloque.querySelector(`.chip-talle[data-talla="${talla}"]`);
+    if (chip) chip.classList.toggle("activo", activo);
+
     const n = cont.children.length;
+    bloque.querySelector(".cabecera-talles").style.display = n ? "grid" : "none";
+    bloque.querySelector(".masivo").style.display = n ? "flex" : "none";
     bloque.querySelector(".resumen-talles").textContent = n ? `${n} talle(s) seleccionado(s)` : "Todavía no elegiste ningún talle";
 }
 
-function agregarBloqueColor() {
+// Crea un bloque de color. Sin "datos" es un bloque vacío (zapatilla nueva);
+// con "datos" ({colorwayId, colorId, variantes, imagenes}) es un color que ya existe.
+function agregarBloqueColor(datos) {
     const cont = document.getElementById("colorways-builder");
     const bloque = document.createElement("div");
     bloque.className = "bloque-color";
+
+    bloque._colorwayId = datos?.colorwayId ?? null;
+    bloque._variantesOriginales = (datos?.variantes ?? []).map(v => v.id);
+    bloque._imagenesOriginales = (datos?.imagenes ?? []).map(i => i.id);
+    bloque._principalOriginal = (datos?.imagenes ?? []).find(i => i.es_Principal)?.id ?? null;
+
+    const tallas = [...new Set([...TALLES_DISPONIBLES, ...(datos?.variantes ?? []).map(v => Number(v.talla))])].sort((a, b) => a - b);
+
     bloque.innerHTML = `
         <div class="bloque-head">
-            <strong>Color <span class="bc-num"></span></strong>
+            <strong>Color <span class="bc-num"></span>${bloque._colorwayId ? ' <small class="tag-existente">ya cargado</small>' : ""}</strong>
             <button type="button" class="btn chico secundario quitar-color">Quitar este color</button>
         </div>
         <div class="campo">
             <label>Color</label>
-            <select class="bc-color">${opcionesColorHtml("")}</select>
+            <select class="bc-color"${bloque._colorwayId ? ' disabled title="Para cambiar el color, quitá este bloque y agregá otro"' : ""}>${opcionesColorHtml(datos?.colorId ?? "")}</select>
         </div>
         <div class="campo">
             <label>Talles (tocá los que quieras, podés elegir varios)</label>
             <div class="chips-talles">
-                ${TALLES_DISPONIBLES.map(t => `<button type="button" class="chip-talle" data-talla="${t}">${t}</button>`).join("")}
+                ${tallas.map(t => `<button type="button" class="chip-talle" data-talla="${t}">${t}</button>`).join("")}
             </div>
             <div class="acciones-chips">
                 <button type="button" class="btn chico secundario sel-todos">Seleccionar todos</button>
@@ -354,22 +377,14 @@ function agregarBloqueColor() {
 
     bloque.querySelectorAll(".chip-talle").forEach(chip => {
         chip.addEventListener("click", () => {
-            const activo = !chip.classList.contains("activo");
-            chip.classList.toggle("activo", activo);
-            alternarTalle(bloque, Number(chip.dataset.talla), activo);
+            alternarTalle(bloque, Number(chip.dataset.talla), !chip.classList.contains("activo"));
         });
     });
     bloque.querySelector(".sel-todos").addEventListener("click", () => {
-        bloque.querySelectorAll(".chip-talle").forEach(chip => {
-            chip.classList.add("activo");
-            alternarTalle(bloque, Number(chip.dataset.talla), true);
-        });
+        bloque.querySelectorAll(".chip-talle").forEach(chip => alternarTalle(bloque, Number(chip.dataset.talla), true));
     });
     bloque.querySelector(".sel-ninguno").addEventListener("click", () => {
-        bloque.querySelectorAll(".chip-talle").forEach(chip => {
-            chip.classList.remove("activo");
-            alternarTalle(bloque, Number(chip.dataset.talla), false);
-        });
+        bloque.querySelectorAll(".chip-talle").forEach(chip => alternarTalle(bloque, Number(chip.dataset.talla), false));
     });
     bloque.querySelector(".aplicar-masivo").addEventListener("click", () => {
         const precio = bloque.querySelector(".m-precio").value;
@@ -379,10 +394,20 @@ function agregarBloqueColor() {
             if (stock !== "") f.querySelector(".t-stock").value = stock;
         });
     });
-    bloque.querySelector(".quitar-color").addEventListener("click", () => { bloque.remove(); renumerarBloques(); });
-    // Fotos del color: se pueden sumar de a varias, quitar y elegir cuál es la principal
-    bloque._fotos = [];
+    bloque.querySelector(".quitar-color").addEventListener("click", () => {
+        if (bloque._colorwayId && !confirm("Este color ya está guardado: al guardar los cambios se borran también sus talles y fotos. ¿Quitarlo?")) return;
+        bloque.remove();
+        renumerarBloques();
+    });
+
+    // Fotos del color: las que ya existen (con id y url) + las nuevas (archivo). Se puede
+    // sumar, quitar y elegir cuál es la principal.
+    const existentes = [...(datos?.imagenes ?? [])]
+        .sort((a, b) => (b.es_Principal ? 1 : 0) - (a.es_Principal ? 1 : 0) || (a.orden ?? 0) - (b.orden ?? 0) || a.id - b.id)
+        .map(i => ({ id: i.id, orden: i.orden ?? 0, vista: i.url }));
+    bloque._fotos = existentes;
     bloque._principal = 0;
+
     const inputFotos = bloque.querySelector(".bc-fotos");
     const previews = bloque.querySelector(".previews");
 
@@ -392,7 +417,7 @@ function agregarBloqueColor() {
             const div = document.createElement("div");
             div.className = "preview" + (i === bloque._principal ? " principal" : "");
             div.innerHTML = `
-                <img src="${URL.createObjectURL(f)}" alt="">
+                <img src="${f.vista}" alt="">
                 <button type="button" class="estrella" title="Usar como foto principal">★</button>
                 <button type="button" class="quitar-foto" title="Quitar esta foto">✕</button>
                 ${i === bloque._principal ? "<span>Principal</span>" : ""}
@@ -410,8 +435,8 @@ function agregarBloqueColor() {
 
     inputFotos.addEventListener("change", () => {
         [...inputFotos.files].forEach(f => {
-            const repetida = bloque._fotos.some(x => x.name === f.name && x.size === f.size && x.lastModified === f.lastModified);
-            if (!repetida) bloque._fotos.push(f);
+            const repetida = bloque._fotos.some(x => x.archivo && x.archivo.name === f.name && x.archivo.size === f.size && x.archivo.lastModified === f.lastModified);
+            if (!repetida) bloque._fotos.push({ archivo: f, vista: URL.createObjectURL(f) });
         });
         inputFotos.value = ""; // así se puede volver a elegir más fotos después
         dibujarFotos();
@@ -419,9 +444,13 @@ function agregarBloqueColor() {
 
     cont.appendChild(bloque);
     renumerarBloques();
+
+    // Si es un color que ya existe, cargamos sus talles y fotos
+    (datos?.variantes ?? []).forEach(v => alternarTalle(bloque, Number(v.talla), true, v));
+    dibujarFotos();
 }
 
-// Lee y valida lo que cargó el admin. Devuelve { colorways } o lanza Error con el motivo.
+// Lee y valida lo que cargó el admin. Devuelve la lista de colores o lanza Error con el motivo.
 function leerColorways() {
     const bloques = [...document.querySelectorAll("#colorways-builder .bloque-color")];
     if (bloques.length === 0) throw new Error("Agregá al menos un color.");
@@ -440,21 +469,186 @@ function leerColorways() {
             const stock = f.querySelector(".t-stock").value;
             if (precio === "" || stock === "") throw new Error(`Color ${n}: completá precio y stock del talle ${talla}.`);
             if (Number(precio) < 0 || Number(stock) < 0) throw new Error(`Color ${n}: el precio y el stock no pueden ser negativos.`);
-            return { talla, precio: Number(precio), stock: Number(stock) };
+            return { id: f.dataset.varianteId ? Number(f.dataset.varianteId) : null, talla, precio: Number(precio), stock: Number(stock) };
         });
         if (variantes.length === 0) throw new Error(`Color ${n}: elegí al menos un talle.`);
 
-        // La foto principal va primera (Orden 1, Es_Principal), el resto sigue en el orden en que se cargaron
+        // La foto principal va primera (Orden 1), el resto sigue en el orden en que se cargaron
         const fotos = [...b._fotos];
         if (fotos.length) fotos.unshift(...fotos.splice(b._principal, 1));
 
-        return { colorId, variantes, fotos };
+        return {
+            colorwayId: b._colorwayId,
+            colorId,
+            variantes,
+            fotos,
+            original: { variantes: b._variantesOriginales, imagenes: b._imagenesOriginales, principal: b._principalOriginal },
+        };
     });
+}
+
+// ----- Helpers de envío -----
+function jsonSend(method, path, datos) {
+    return api(path, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(datos),
+    });
+}
+
+function subirFoto(archivo, orden, esPrincipal, zapatillaColorId) {
+    const fd = new FormData();
+    fd.append("Archivo", archivo);
+    fd.append("Orden", orden);
+    fd.append("Es_Principal", esPrincipal);
+    fd.append("ZapatillaColorId", zapatillaColorId);
+    return api("/api/Admin/subir-imagen", { method: "POST", body: fd });
+}
+
+function nombreDeColor(colorId) {
+    return COLORES.find(c => c.id === colorId)?.nombre ?? `color ${colorId}`;
+}
+
+// Crea un color nuevo en una zapatilla: colorway + talles + fotos
+async function crearColorwayCompleto(zapatillaId, cw, paso) {
+    const nombreColor = nombreDeColor(cw.colorId);
+
+    const colorway = await jsonSend("POST", "/api/Admin/colorways", { zapatillaId, colorId: cw.colorId });
+    paso(`✔ Color ${nombreColor} agregado`);
+
+    for (const v of cw.variantes) {
+        await jsonSend("POST", "/api/Admin/variantes", { zapatillaColorId: colorway.id, talla: v.talla, precio: v.precio, stock: v.stock });
+    }
+    paso(`✔ ${cw.variantes.length} talle(s) cargados en ${nombreColor}`);
+
+    for (let i = 0; i < cw.fotos.length; i++) {
+        await subirFoto(cw.fotos[i].archivo, i + 1, i === 0, colorway.id);
+    }
+    if (cw.fotos.length) paso(`✔ ${cw.fotos.length} foto(s) subidas en ${nombreColor}`);
+}
+
+// Edición: compara lo que hay en el formulario con lo que había y aplica solo las diferencias
+async function guardarEdicion(marcaId, nombre, descripcion, colorways, paso) {
+    const id = EDITANDO.id;
+
+    await jsonSend("PUT", `/api/Admin/zapatillas/${id}`, { marcaId, nombre, descripcion });
+    paso("✔ Datos de la zapatilla actualizados");
+
+    // Colores que estaban y ya no
+    const quedan = new Set(colorways.filter(c => c.colorwayId).map(c => c.colorwayId));
+    for (const idOriginal of EDITANDO.colorwayIds) {
+        if (!quedan.has(idOriginal)) {
+            await api(`/api/Admin/colorways/${idOriginal}`, { method: "DELETE" });
+            paso("✔ Color quitado");
+        }
+    }
+
+    for (const cw of colorways) {
+        if (!cw.colorwayId) { await crearColorwayCompleto(id, cw, paso); continue; }
+
+        const nombreColor = nombreDeColor(cw.colorId);
+
+        // Talles: borrar los que se sacaron, actualizar los que siguen, crear los nuevos
+        const idsActuales = new Set(cw.variantes.filter(v => v.id).map(v => v.id));
+        for (const vid of cw.original.variantes) {
+            if (!idsActuales.has(vid)) await api(`/api/Admin/variantes/${vid}`, { method: "DELETE" });
+        }
+        for (const v of cw.variantes) {
+            if (v.id) await jsonSend("PUT", `/api/Admin/variantes/${v.id}`, { talla: v.talla, precio: v.precio, stock: v.stock });
+            else await jsonSend("POST", "/api/Admin/variantes", { zapatillaColorId: cw.colorwayId, talla: v.talla, precio: v.precio, stock: v.stock });
+        }
+        paso(`✔ Talles de ${nombreColor} actualizados`);
+
+        // Fotos: borrar las que se sacaron, subir las nuevas y dejar como principal la elegida
+        const idsFotos = new Set(cw.fotos.filter(f => f.id).map(f => f.id));
+        for (const iid of cw.original.imagenes) {
+            if (!idsFotos.has(iid)) await api(`/api/Admin/imagenes/${iid}`, { method: "DELETE" });
+        }
+
+        let orden = Math.max(0, ...cw.fotos.filter(f => f.id).map(f => f.orden ?? 0));
+        let principalId = null;
+        for (let i = 0; i < cw.fotos.length; i++) {
+            const f = cw.fotos[i];
+            let fotoId = f.id;
+            if (!fotoId) {
+                const creada = await subirFoto(f.archivo, ++orden, false, cw.colorwayId);
+                fotoId = creada.id;
+            }
+            if (i === 0) principalId = fotoId; // la principal va primera
+        }
+        if (principalId && principalId !== cw.original.principal) {
+            await api(`/api/Admin/imagenes/${principalId}/principal`, { method: "PUT" });
+        }
+        paso(`✔ Fotos de ${nombreColor} actualizadas`);
+    }
+}
+
+// ----- Modo creación / edición del mismo formulario -----
+function reiniciarFormularioZapatilla() {
+    document.getElementById("form-zapatilla").reset();
+    document.getElementById("colorways-builder").innerHTML = "";
+    agregarBloqueColor();
+}
+
+function ponerModoEdicion(activo, nombre) {
+    document.getElementById("titulo-form-zapatilla").textContent = activo ? `Editando: ${nombre}` : "Nueva zapatilla";
+    document.getElementById("btn-crear-zapatilla").textContent = activo ? "Guardar cambios" : "Crear zapatilla completa";
+    document.getElementById("btn-cancelar-edicion").style.display = activo ? "inline-block" : "none";
+    document.getElementById("form-zapatilla").classList.toggle("editando", activo);
+}
+
+async function iniciarEdicion(id) {
+    mostrarMensaje("msg-zapatilla", "Cargando la zapatilla…", "exito");
+    try {
+        const det = await api(`/api/Catalogo/${id}`);
+        const colorways = await Promise.all((det.zapatillaColores ?? []).map(async zc => ({
+            colorwayId: zc.id,
+            colorId: zc.colorId ?? zc.color?.id,
+            imagenes: zc.imagenes ?? [],
+            variantes: await api(`/api/Catalogo/colorway/${zc.id}/variantes`),
+        })));
+
+        EDITANDO = { id, colorwayIds: colorways.map(c => c.colorwayId) };
+
+        document.getElementById("progreso-zapatilla").innerHTML = "";
+        document.getElementById("zapatilla-marca").value = det.marcaId ?? det.marca?.id ?? "";
+        document.getElementById("zapatilla-nombre").value = det.nombre ?? "";
+        document.getElementById("zapatilla-descripcion").value = det.descripcion ?? "";
+
+        const builder = document.getElementById("colorways-builder");
+        builder.innerHTML = "";
+        if (colorways.length === 0) agregarBloqueColor();
+        colorways.forEach(cw => agregarBloqueColor(cw));
+
+        ponerModoEdicion(true, det.nombre);
+        mostrarMensaje("msg-zapatilla", "Modificá lo que necesites y apretá “Guardar cambios”.", "exito");
+        document.getElementById("form-zapatilla").scrollIntoView({ behavior: "smooth", block: "start" });
+    } catch (err) {
+        EDITANDO = null;
+        mostrarMensaje("msg-zapatilla", "No se pudo cargar la zapatilla: " + err.message, "error");
+    }
+}
+
+function cancelarEdicion() {
+    EDITANDO = null;
+    reiniciarFormularioZapatilla();
+    ponerModoEdicion(false);
+    document.getElementById("progreso-zapatilla").innerHTML = "";
+    const msg = document.getElementById("msg-zapatilla");
+    msg.className = "mensaje";
+    msg.textContent = "";
 }
 
 function wireFormZapatilla() {
     agregarBloqueColor();
-    document.getElementById("btn-agregar-color").addEventListener("click", agregarBloqueColor);
+    document.getElementById("btn-agregar-color").addEventListener("click", () => agregarBloqueColor());
+    document.getElementById("btn-cancelar-edicion").addEventListener("click", cancelarEdicion);
+
+    // Botones "Editar" de la tabla del catálogo
+    document.getElementById("tabla-zapatillas").addEventListener("click", (e) => {
+        const btn = e.target.closest(".btn-editar");
+        if (btn) iniciarEdicion(Number(btn.dataset.id));
+    });
 
     document.getElementById("form-zapatilla").addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -476,47 +670,43 @@ function wireFormZapatilla() {
             li.textContent = texto;
             lista.appendChild(li);
         };
-        const jsonPost = (path, datos) => api(path, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(datos),
-        });
 
         boton.disabled = true;
+
+        // ----- EDITAR una zapatilla existente -----
+        if (EDITANDO) {
+            mostrarMensaje("msg-zapatilla", "Guardando… no cierres esta página.", "exito");
+            try {
+                await guardarEdicion(marcaId, nombre, descripcion, colorways, paso);
+                mostrarMensaje("msg-zapatilla", `¡Listo! Se guardaron los cambios de "${nombre}".`, "exito");
+                EDITANDO = null;
+                reiniciarFormularioZapatilla();
+                ponerModoEdicion(false);
+                detalleCache = {};
+                cargarZapatillas();
+                cargarInventario();
+            } catch (err) {
+                mostrarMensaje("msg-zapatilla", "Error: " + err.message + " Algunos cambios pueden haberse guardado: volvé a abrir la zapatilla con “Editar” para ver cómo quedó.", "error");
+                cargarZapatillas();
+            } finally {
+                boton.disabled = false;
+            }
+            return;
+        }
+
+        // ----- CREAR una zapatilla nueva -----
         mostrarMensaje("msg-zapatilla", "Creando… no cierres esta página.", "exito");
 
         let zapatillaId = null;
         try {
-            const zapatilla = await jsonPost("/api/Admin/zapatillas", { marcaId, nombre, descripcion });
+            const zapatilla = await jsonSend("POST", "/api/Admin/zapatillas", { marcaId, nombre, descripcion });
             zapatillaId = zapatilla.id;
             paso(`✔ Zapatilla creada (#${zapatillaId})`);
 
-            for (const cw of colorways) {
-                const nombreColor = COLORES.find(c => c.id === cw.colorId)?.nombre ?? `color ${cw.colorId}`;
-
-                const colorway = await jsonPost("/api/Admin/colorways", { zapatillaId, colorId: cw.colorId });
-                paso(`✔ Color ${nombreColor} agregado`);
-
-                for (const v of cw.variantes) {
-                    await jsonPost("/api/Admin/variantes", { zapatillaColorId: colorway.id, ...v });
-                }
-                paso(`✔ ${cw.variantes.length} talle(s) cargados en ${nombreColor}`);
-
-                for (let i = 0; i < cw.fotos.length; i++) {
-                    const fd = new FormData();
-                    fd.append("Archivo", cw.fotos[i]);
-                    fd.append("Orden", i + 1);
-                    fd.append("Es_Principal", i === 0);
-                    fd.append("ZapatillaColorId", colorway.id);
-                    await api("/api/Admin/subir-imagen", { method: "POST", body: fd });
-                }
-                if (cw.fotos.length) paso(`✔ ${cw.fotos.length} foto(s) subidas en ${nombreColor}`);
-            }
+            for (const cw of colorways) await crearColorwayCompleto(zapatillaId, cw, paso);
 
             mostrarMensaje("msg-zapatilla", `¡Listo! "${nombre}" se creó completa con ${colorways.length} color(es).`, "exito");
-            e.target.reset();
-            document.getElementById("colorways-builder").innerHTML = "";
-            agregarBloqueColor();
+            reiniciarFormularioZapatilla();
             detalleCache = {};
             cargarZapatillas();
             cargarInventario();

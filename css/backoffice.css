@@ -513,3 +513,16 @@ tr:hover td { background: rgba(255, 255, 255, 0.03); }
 .preview .estrella:hover { color: var(--naranja); }
 .preview .quitar-foto { right: 4px; }
 .preview .quitar-foto:hover { background: var(--error); color: #1a0505; }
+
+/* ===== EDICIÓN ===== */
+.editando { border-left: 3px solid var(--naranja); padding-left: 16px; }
+.tag-existente {
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--texto-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+.acciones-final { display: flex; gap: 12px; flex-wrap: wrap; }

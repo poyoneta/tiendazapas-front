@@ -82,9 +82,9 @@
       <!-- ZAPATILLAS -->
       <section class="seccion" id="seccion-zapatillas">
         <h2>Zapatillas</h2>
-        <p class="desc">Creá una zapatilla completa en un solo paso: datos, colores, talles con precio y stock, y fotos. Para subir fotos a una zapatilla que ya existe usá la pestaña Imágenes.</p>
+        <p class="desc">Creá una zapatilla completa en un solo paso: datos, colores, talles con precio y stock, y fotos. Para modificar una que ya existe, tocá “Editar” en el catálogo de más abajo: se abre este mismo formulario con todo cargado.</p>
         <div class="card">
-          <h3>Nueva zapatilla</h3>
+          <h3 id="titulo-form-zapatilla">Nueva zapatilla</h3>
           <form id="form-zapatilla">
 
             <div class="paso"><span class="paso-num">1</span> Datos de la zapatilla</div>
@@ -104,6 +104,7 @@
 
             <div class="acciones-final">
               <button class="btn" type="submit" id="btn-crear-zapatilla">Crear zapatilla completa</button>
+              <button class="btn secundario" type="button" id="btn-cancelar-edicion" style="display:none;">Cancelar edición</button>
             </div>
             <div class="mensaje" id="msg-zapatilla"></div>
             <ul class="progreso" id="progreso-zapatilla"></ul>
@@ -111,7 +112,7 @@
         </div>
         <div class="card">
           <h3>Catálogo actual</h3>
-          <table><thead><tr><th>Id</th><th>Marca</th><th>Nombre</th></tr></thead><tbody id="tabla-zapatillas"></tbody></table>
+          <table><thead><tr><th>Id</th><th>Marca</th><th>Nombre</th><th></th></tr></thead><tbody id="tabla-zapatillas"></tbody></table>
         </div>
       </section>
 
