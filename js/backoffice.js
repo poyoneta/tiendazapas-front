@@ -1,5 +1,4 @@
 // ===== CONFIG =====
-// Mismo proyecto de Supabase que login.html / auth.js.
 const SUPABASE_URL = "https://jkuyzcpupjaitbvfroxc.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImprdXl6Y3B1cGphaXRidmZyb3hjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY0NzUwMDEsImV4cCI6MjEwMjA1MTAwMX0.L5hMt-CE4dzaEe_GbYpo1OGPTGLQvFkCidb1S8yZRvo";
 const API_URL = "https://apitiendazapatillas-1.onrender.com";
@@ -9,12 +8,12 @@ const { createClient } = supabase;
 const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Estado en memoria para no repetir pedidos
-let ZAPATILLAS = [];   // catálogo simplificado (con marca)
+let ZAPATILLAS = [];    // catálogo simplificado (con marca)
 let MARCAS = [];
-let detalleCache = {}; // zapatillaId -> detalle con colorways/imagenes
+let COLORES = [];       // colores existentes en la base (Id + nombre + hex)
+let detalleCache = {};  // zapatillaId -> detalle con colorways/imagenes
 
-// Misma lógica que auth.js: 2 consultas simples en vez de un "embed"
-// profiles->roles, para no depender de que la Foreign Key esté detectada.
+// Misma lógica que auth.js: 2 consultas simples en vez de un "embed" profiles->roles.
 async function esUsuarioAdmin(session) {
     const { data: perfil, error: errorPerfil } = await supabaseClient
         .from("profiles")
@@ -66,12 +65,9 @@ async function esUsuarioAdmin(session) {
 
         inicializarPanel();
     } catch (e) {
-        // Si algo falla (RLS, red, nombres de tabla/columna, etc.) nunca nos
-        // quedamos trabados en "Verificando acceso…": mostramos el error acá
-        // y lo logueamos completo en la consola (F12) para poder diagnosticarlo.
         console.error("Error verificando acceso al backoffice:", e);
-        const cargando = document.getElementById("cargando");
-        cargando.textContent = "No se pudo verificar tu acceso. Abrí la consola (F12) para ver el detalle del error.";
+        document.getElementById("cargando").textContent =
+            "No se pudo verificar tu acceso. Abrí la consola (F12) para ver el detalle del error.";
     }
 })();
 
@@ -86,7 +82,15 @@ function inicializarPanel() {
         });
     });
 
+    // Listeners "en cascada" entre selects: se atan UNA sola vez acá
+    document.getElementById("colorway-zapatilla").addEventListener("change", (e) => actualizarTablaColorways(e.target.value));
+    document.getElementById("variante-zapatilla").addEventListener("change", (e) => cargarColorwaysEnSelect(e.target.value, "variante-colorway"));
+    document.getElementById("imagen-zapatilla").addEventListener("change", (e) => cargarColorwaysEnSelect(e.target.value, "imagen-colorway"));
+    document.getElementById("eliminar-var-zapatilla").addEventListener("change", (e) => cargarColorwaysEnSelect(e.target.value, "eliminar-var-colorway"));
+    document.getElementById("eliminar-var-colorway").addEventListener("change", (e) => cargarVariantesEnSelect(e.target.value, "eliminar-variante"));
+
     cargarMarcas();
+    cargarColores();
     cargarZapatillas();
     wireFormMarca();
     wireFormColor();
@@ -121,6 +125,19 @@ async function api(path, options = {}) {
     return tipo.includes("application/json") ? resp.json() : null;
 }
 
+// Escapa texto antes de meterlo con innerHTML
+function esc(texto) {
+    return String(texto ?? "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+}
+
+// Devuelve un color CSS válido a partir del hex guardado (con o sin "#"); si no es válido, gris.
+function colorCss(hex) {
+    const h = String(hex ?? "").trim();
+    if (/^#[0-9a-fA-F]{3,8}$/.test(h)) return h;
+    if (/^[0-9a-fA-F]{3,8}$/.test(h)) return "#" + h;
+    return "#333";
+}
+
 // ===== CARGA DE DATOS BASE =====
 async function cargarMarcas() {
     try {
@@ -131,6 +148,32 @@ async function cargarMarcas() {
         `).join("");
     } catch (e) {
         console.error("Error cargando marcas:", e);
+    }
+}
+
+async function cargarColores() {
+    const select = document.getElementById("colorway-color");
+    try {
+        COLORES = await api("/api/Catalogo/colores");
+
+        llenarSelect(select, COLORES.map(c => ({
+            value: c.id,
+            label: `#${c.id} - ${esc(c.nombre)}${c.hex ? " (" + esc(c.hex) + ")" : ""}`
+        })), "Elegí un color");
+
+        const filas = COLORES.map(c => `
+            <tr>
+                <td>#${c.id}</td>
+                <td><span class="swatch" style="background:${colorCss(c.hex)}"></span>${esc(c.nombre)}</td>
+                <td>${esc(c.hex) || "-"}</td>
+            </tr>
+        `).join("") || `<tr><td colspan="3">Todavía no hay colores creados.</td></tr>`;
+
+        document.getElementById("tabla-colores").innerHTML = filas;
+        document.getElementById("tabla-colores-colorway").innerHTML = filas;
+    } catch (e) {
+        console.error("Error cargando colores:", e);
+        llenarSelect(select, [], "No se pudo cargar la lista de colores");
     }
 }
 
@@ -146,13 +189,6 @@ async function cargarZapatillas() {
         document.getElementById("tabla-zapatillas").innerHTML = ZAPATILLAS.map(z => `
             <tr><td>${z.id}</td><td>${z.marca?.nombre ?? "-"}</td><td>${z.nombre}</td></tr>
         `).join("");
-
-        // Cuando cambia la zapatilla elegida en cada select dependiente, cargamos sus colorways
-        document.getElementById("colorway-zapatilla").addEventListener("change", (e) => actualizarTablaColorways(e.target.value));
-        document.getElementById("variante-zapatilla").addEventListener("change", (e) => cargarColorwaysEnSelect(e.target.value, "variante-colorway"));
-        document.getElementById("imagen-zapatilla").addEventListener("change", (e) => cargarColorwaysEnSelect(e.target.value, "imagen-colorway"));
-        document.getElementById("eliminar-var-zapatilla").addEventListener("change", (e) => cargarColorwaysEnSelect(e.target.value, "eliminar-var-colorway"));
-        document.getElementById("eliminar-var-colorway").addEventListener("change", (e) => cargarVariantesEnSelect(e.target.value, "eliminar-variante"));
     } catch (e) {
         console.error("Error cargando zapatillas:", e);
     }
@@ -169,25 +205,33 @@ async function obtenerDetalle(zapatillaId) {
 async function cargarColorwaysEnSelect(zapatillaId, selectId) {
     const select = document.getElementById(selectId);
     if (!zapatillaId) { llenarSelect(select, [], "Elegí primero una zapatilla"); return; }
-    const detalle = await obtenerDetalle(zapatillaId);
-    const opciones = (detalle?.zapatillaColores ?? []).map(zc => ({
-        value: zc.id,
-        label: `#${zc.id} - ${zc.color?.nombre ?? "color " + zc.colorId}`
-    }));
-    llenarSelect(select, opciones, "Elegí un colorway");
+    try {
+        const detalle = await obtenerDetalle(zapatillaId);
+        const opciones = (detalle?.zapatillaColores ?? []).map(zc => ({
+            value: zc.id,
+            label: `#${zc.id} - ${zc.color?.nombre ?? "color " + zc.colorId}`
+        }));
+        llenarSelect(select, opciones, "Elegí un colorway");
+    } catch (e) {
+        console.error("Error cargando colorways:", e);
+    }
 }
 
 async function actualizarTablaColorways(zapatillaId) {
     const tbody = document.getElementById("tabla-colorways");
     if (!zapatillaId) { tbody.innerHTML = ""; return; }
-    const detalle = await obtenerDetalle(zapatillaId);
-    tbody.innerHTML = (detalle?.zapatillaColores ?? []).map(zc => `
-        <tr>
-            <td>#${zc.id}</td>
-            <td><span class="swatch" style="background:${zc.color?.hex ?? "#333"}"></span>${zc.color?.nombre ?? "-"}</td>
-            <td>${(zc.imagenes ?? []).length} foto(s)</td>
-        </tr>
-    `).join("") || `<tr><td colspan="3">Esta zapatilla todavía no tiene colorways.</td></tr>`;
+    try {
+        const detalle = await obtenerDetalle(zapatillaId);
+        tbody.innerHTML = (detalle?.zapatillaColores ?? []).map(zc => `
+            <tr>
+                <td>#${zc.id}</td>
+                <td><span class="swatch" style="background:${colorCss(zc.color?.hex)}"></span>${esc(zc.color?.nombre ?? "-")}</td>
+                <td>${(zc.imagenes ?? []).length} foto(s)</td>
+            </tr>
+        `).join("") || `<tr><td colspan="3">Esta zapatilla todavía no tiene colorways.</td></tr>`;
+    } catch (e) {
+        console.error("Error cargando colorways:", e);
+    }
 }
 
 async function cargarVariantesEnSelect(zapatillaColorId, selectId) {
@@ -237,8 +281,9 @@ function wireFormColor() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ nombre, hex }),
             });
-            mostrarMensaje("msg-color", `Color creado con Id ${creado?.id ?? "?"}. Anotalo para usarlo en "Colorways".`, "exito");
+            mostrarMensaje("msg-color", `Color creado con Id ${creado?.id ?? "?"}. Ya aparece en la lista de Colorways.`, "exito");
             e.target.reset();
+            cargarColores();
         } catch (err) {
             mostrarMensaje("msg-color", "Error: " + err.message, "error");
         }
@@ -275,6 +320,7 @@ function wireFormColorway() {
         const zapatillaId = Number(document.getElementById("colorway-zapatilla").value);
         const colorId = Number(document.getElementById("colorway-color").value);
         if (!zapatillaId) { mostrarMensaje("msg-colorway", "Elegí una zapatilla.", "error"); return; }
+        if (!colorId) { mostrarMensaje("msg-colorway", "Elegí un color.", "error"); return; }
         try {
             await api("/api/Admin/colorways", {
                 method: "POST",
@@ -284,6 +330,7 @@ function wireFormColorway() {
             mostrarMensaje("msg-colorway", "Colorway creado correctamente.", "exito");
             e.target.reset();
             delete detalleCache[zapatillaId];
+            document.getElementById("colorway-zapatilla").value = zapatillaId;
             actualizarTablaColorways(zapatillaId);
         } catch (err) {
             mostrarMensaje("msg-colorway", "Error: " + err.message, "error");
@@ -318,6 +365,7 @@ function wireFormVariante() {
 function wireFormImagen() {
     document.getElementById("form-imagen").addEventListener("submit", async (e) => {
         e.preventDefault();
+        const zapatillaId = document.getElementById("imagen-zapatilla").value;
         const zapatillaColorId = document.getElementById("imagen-colorway").value;
         const archivo = document.getElementById("imagen-archivo").files[0];
         const orden = document.getElementById("imagen-orden").value || 1;
@@ -336,7 +384,6 @@ function wireFormImagen() {
             await api("/api/Admin/subir-imagen", { method: "POST", body: formData });
             mostrarMensaje("msg-imagen", "Imagen subida correctamente.", "exito");
             e.target.reset();
-            const zapatillaId = document.getElementById("imagen-zapatilla").value;
             delete detalleCache[zapatillaId];
         } catch (err) {
             mostrarMensaje("msg-imagen", "Error: " + err.message, "error");

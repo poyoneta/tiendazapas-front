@@ -75,11 +75,10 @@
             <div class="mensaje" id="msg-color"></div>
           </form>
         </div>
-        <p class="ayuda">
-          Nota: la API todavía no tiene un endpoint para listar los colores creados
-          (falta un GET, ej. <code>api/Catalogo/colores</code>). Por ahora, para armar un
-          colorway vas a necesitar recordar/anotar el Id de cada color que crees acá.
-        </p>
+        <div class="card">
+          <h3>Colores existentes</h3>
+          <table><thead><tr><th>Id</th><th>Color</th><th>Hex</th></tr></thead><tbody id="tabla-colores"></tbody></table>
+        </div>
       </section>
 
       <!-- ZAPATILLAS -->
@@ -118,13 +117,17 @@
                 <select id="colorway-zapatilla" required></select>
               </div>
               <div class="campo">
-                <label>Id de color</label>
-                <input type="number" id="colorway-color" min="1" required>
+                <label>Color</label>
+                <select id="colorway-color" required></select>
               </div>
             </div>
             <button class="btn" type="submit">Crear colorway</button>
             <div class="mensaje" id="msg-colorway"></div>
           </form>
+        </div>
+        <div class="card">
+          <h3>Colores disponibles</h3>
+          <table><thead><tr><th>Id</th><th>Color</th><th>Hex</th></tr></thead><tbody id="tabla-colores-colorway"></tbody></table>
         </div>
         <div class="card">
           <h3>Colorways de la zapatilla seleccionada</h3>
